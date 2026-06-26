@@ -49,6 +49,9 @@ add_subdirectory(Lib/DSP)
 # LVGL
 add_subdirectory(Lib/lvgl)
 
+# ETL
+add_subdirectory(Lib/ETL)
+
 # Device drivers
 add_subdirectory(Device/output)
 
@@ -83,6 +86,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     device_output
     FreeRTOS
     CMSISDSP
+    etl
 )
 
 add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD

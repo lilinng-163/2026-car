@@ -1,4 +1,4 @@
-# STM32F407 + FreeRTOS + LVGL + CMSIS-DSP
+# STM32F407 + FreeRTOS + LVGL + CMSIS-DSP + ETL
 
 ## Hardware
 
@@ -14,7 +14,8 @@
 | **STM32F4 HAL** | `Drivers/` | CubeMX generated HAL drivers |
 | **FreeRTOS** | `Lib/FreeRTOS/` | RTOS kernel, static library |
 | **LVGL** | `Lib/lvgl/lvgl_sdk/` | GUI framework, local copy |
-| **CMSIS-DSP** | `Lib/DSP/cmsis_dsp_sdk/` | Digital Signal Processing, local copy |
+| **CMSIS-DSP** | `Lib/DSP/cmsis_dsp_sdk/` | Digital Signal Processing, static library |
+| **ETL** | `Lib/ETL/etl_sdk/` | Embedded Template Library, header-only |
 
 ## Build
 
