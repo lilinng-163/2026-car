@@ -1,0 +1,17 @@
+build/
+Debug/
+Release/
+.vscode/
+*.elf
+*.bin
+*.hex
+*.lst
+*.dis
+*.map
+*.o
+*.obj
+*.d
+*.su
+*.stackdump
+compile_commands.json
+.mxproject
