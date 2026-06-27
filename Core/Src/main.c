@@ -17,6 +17,11 @@
 #include "FreeRTOS/task.h"
 #include "lcd.h"
 #include "lvgl.h"
+#include "lv_port_touch.h"
+#include "lvgl_task.h"
+#include "led_task.h"
+#include "lvgl_mutex.h"
+#include "show_pv.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -88,21 +93,21 @@ int main(void)
 
   lv_init();
   lcd_init();
+  lv_port_touch_init();
 
-  lv_obj_t *label = lv_label_create(lv_screen_active());
-  lv_label_set_text(label, "Hello STM32!");
-  lv_obj_center(label);
+  lvgl_mutex_init();
+
+  lvgl_task_create();
+  show_pv_create();
+  led_task_create();
+
+  vTaskStartScheduler();
 
   /* USER CODE END 2 */
 
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-
-    /* USER CODE BEGIN 3 */
-    lv_timer_handler();
-    HAL_Delay(1);
   }
   /* USER CODE END 3 */
 }

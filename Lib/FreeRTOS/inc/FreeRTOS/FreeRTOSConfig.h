@@ -51,6 +51,9 @@
 #define configUSE_TRACE_FACILITY	1
 #define configUSE_16_BIT_TICKS		0
 #define configIDLE_SHOULD_YIELD		1
+#define configUSE_MUTEXES			1
+#define configUSE_RECURSIVE_MUTEXES	1
+#define configSUPPORT_DYNAMIC_ALLOCATION 1
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0
@@ -85,7 +88,7 @@ NVIC value of 255. */
 //FreeRTOS对接芯片中断的接口函数
 #define xPortPendSVHandler	PendSV_Handler
 #define vPortSVCHandler	SVC_Handler
-#define xPortSysTickHandler	SysTick_Handler
+// #define xPortSysTickHandler	SysTick_Handler
 
 #define INCLUDE_xTaskGetSchedulerState	1
 

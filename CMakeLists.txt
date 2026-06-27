@@ -54,6 +54,10 @@ add_subdirectory(Lib/ETL)
 
 # Device drivers
 add_subdirectory(Device/output)
+add_subdirectory(Device/input)
+
+# App
+add_subdirectory(app)
 
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -84,6 +88,8 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
     lvgl
     device_output
+    device_input
+    app
     FreeRTOS
     CMSISDSP
     etl
