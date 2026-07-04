@@ -1,5 +1,5 @@
 #include "lvgl_task.h"
-#include "lvgl_mutex.h"
+#include "mutex.h"
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "lvgl.h"
@@ -21,6 +21,6 @@ static void lvgl_task(void *pv) {
     }
 }
 
-extern "C" void lvgl_task_create() {
+void lvgl_task_create() {
     xTaskCreate(lvgl_task, NAME, STACK, NULL, PRIO, NULL);
 }

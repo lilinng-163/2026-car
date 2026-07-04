@@ -1,8 +1,10 @@
 add_library(app STATIC
     src/lvgl_task.cpp
     src/led_task.cpp
-    src/lvgl_mutex.cpp
+    src/mutex.cpp
     src/show_pv.cpp
+    src/lv_obj.cpp
+    src/motor_task.cpp
 )
 
 target_include_directories(app PUBLIC
@@ -13,4 +15,6 @@ target_link_libraries(app PUBLIC
     lvgl
     FreeRTOS
     stm32cubemx
+    device_output
+    pid
 )

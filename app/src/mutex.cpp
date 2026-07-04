@@ -1,11 +1,10 @@
-#include "lvgl_mutex.h"
+#include "mutex.h"
 #include <cstdio>
 
-extern "C" {
 SemaphoreHandle_t lvgl_mutex = NULL;
-}
 
-extern "C" int lvgl_mutex_init() {
+int lvgl_mutex_init(void)   // 控件创建和lvgl定时回调之间的互斥锁
+{
     lvgl_mutex = xSemaphoreCreateMutex();
     if (lvgl_mutex == NULL) {
         printf("lvgl_mutex create failed\n");
