@@ -5,6 +5,9 @@
 #include "pid.h"
 #include "motor_task.h"
 
+pid left_motor_pid(1.0, 0.3, 0.01, 0, 10);
+pid right_motor_pid(1.0, 0.3, 0.01, 0, 10);
+
 int motor_task(void *pv)
 {
     (void)pv;

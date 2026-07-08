@@ -11,7 +11,8 @@ static constexpr const char *NAME  = "show_pv";
 static constexpr configSTACK_DEPTH_TYPE STACK = 512;
 static constexpr UBaseType_t PRIO = 2;
 
-static void show_pv_task(void *pv) {
+static void show_pv_task(void *pv)
+{
     (void)pv;
     printf("show_pv start\n");
 
@@ -24,17 +25,26 @@ static void show_pv_task(void *pv) {
     xSemaphoreGive(lvgl_mutex);
 
     printf("show_pv done\n");
-    while (1) {
-        if (dht11_request) {
+    while (1)
+    {
+        // 切换页面 + 刷新 PID 参数显示（读共享 PID 对象，key_task 写、这里读）
+        xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
+        ui_page_apply();
+        pid_update_ui();
+        xSemaphoreGive(lvgl_mutex);
+
+        if (dht11_request)
+        {
             dht11_request = false;
             xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
             dht11_update_ui();
             xSemaphoreGive(lvgl_mutex);
         }
-        vTaskDelay(pdMS_TO_TICKS(200));
+        vTaskDelay(pdMS_TO_TICKS(50));
     }
 }
 
-void show_pv_create() {
+void show_pv_create()
+{
     xTaskCreate(show_pv_task, NAME, STACK, NULL, PRIO, NULL);
 }

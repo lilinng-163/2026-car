@@ -12,7 +12,8 @@ static constexpr UBaseType_t PRIO = 1;
 static void lvgl_task(void *pv) {
     (void)pv;
     printf("lvgl start\n");
-    while (1) {
+    while (1) 
+    {
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         lv_tick_inc(5);
         lv_timer_handler();

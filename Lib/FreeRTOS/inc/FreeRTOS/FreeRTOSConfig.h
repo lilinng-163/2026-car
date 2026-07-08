@@ -54,6 +54,7 @@
 #define configUSE_MUTEXES			1
 #define configUSE_RECURSIVE_MUTEXES	1
 #define configSUPPORT_DYNAMIC_ALLOCATION 1
+#define configUSE_TASK_FPU_SUPPORT       1
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0

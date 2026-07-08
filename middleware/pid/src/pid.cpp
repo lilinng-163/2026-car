@@ -65,3 +65,7 @@ float32_t pid::calculate(float32_t setpoint, float32_t measurement)
 
     return out;
 }
+arm_pid_instance_f32 pid::get_instance(void)
+{
+    return this->instance;
+}

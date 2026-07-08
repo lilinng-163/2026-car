@@ -6,6 +6,7 @@ add_library(device_output OBJECT
     src/beep.cpp
     src/dht11.cpp
     src/motor.cpp
+    src/servo.cpp
 )
 
 target_include_directories(device_output PUBLIC

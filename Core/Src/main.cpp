@@ -23,7 +23,9 @@
 #include "lvgl_task.h"
 #include "led_task.h"
 #include "mutex.h"
+#include "servo_task.h"
 #include "show_pv.h"
+#include "key_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -79,6 +81,7 @@ int main(void)
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
+
   /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
@@ -100,6 +103,7 @@ int main(void)
   MX_FSMC_Init();
   MX_USART1_UART_Init();
   MX_TIM1_Init();
+  MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
 
   printf("__cplusplus: %ld\r\n", static_cast<long>(__cplusplus));
@@ -113,6 +117,8 @@ int main(void)
   lvgl_task_create();
   show_pv_create();
   led_task_create();
+  servo_task_create();
+  key_task_create();
 
   vTaskStartScheduler();
 
