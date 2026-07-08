@@ -7,6 +7,7 @@ add_library(device_output OBJECT
     src/dht11.cpp
     src/motor.cpp
     src/servo.cpp
+    src/oled.cpp
 )
 
 target_include_directories(device_output PUBLIC
@@ -16,4 +17,5 @@ target_include_directories(device_output PUBLIC
 target_link_libraries(device_output PUBLIC
     stm32cubemx
     lvgl
+    soft_drivers
 )

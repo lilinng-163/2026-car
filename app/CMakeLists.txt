@@ -7,6 +7,8 @@ add_library(app OBJECT
     src/motor_task.cpp
     src/servo_task.cpp
     src/key_task.cpp
+    src/oled_task.cpp
+    src/imu_task.cpp
 )
 
 target_include_directories(app PUBLIC
@@ -19,5 +21,6 @@ target_link_libraries(app PUBLIC
     stm32cubemx
     device_input
     device_output
+    etl
     pid
 )

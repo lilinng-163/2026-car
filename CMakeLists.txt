@@ -55,6 +55,9 @@ add_subdirectory(Lib/ETL)
 # Middleware
 add_subdirectory(middleware/pid)
 
+# Soft drivers (GPIO 模拟协议)
+add_subdirectory(soft_drivers)
+
 # Device drivers
 add_subdirectory(Device/output)
 add_subdirectory(Device/input)
@@ -97,6 +100,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     CMSISDSP
     etl
     pid
+    soft_drivers
 )
 
 add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD

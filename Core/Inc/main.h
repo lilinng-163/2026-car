@@ -75,6 +75,10 @@ void Error_Handler(void);
 #define DHT11_GPIO_Port GPIOD
 #define LED2_Pin GPIO_PIN_9
 #define LED2_GPIO_Port GPIOG
+#define OLED096_SCL_Pin GPIO_PIN_3
+#define OLED096_SCL_GPIO_Port GPIOB
+#define OLED096_SDA_Pin GPIO_PIN_4
+#define OLED096_SDA_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
