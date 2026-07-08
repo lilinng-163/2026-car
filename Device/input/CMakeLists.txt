@@ -5,6 +5,7 @@ add_library(device_input OBJECT
     src/lv_port_touch.cpp
     src/encoder.cpp
     src/key.cpp
+    src/imu.cpp
 )
 
 target_include_directories(device_input PUBLIC
@@ -14,4 +15,6 @@ target_include_directories(device_input PUBLIC
 target_link_libraries(device_input PUBLIC
     stm32cubemx
     lvgl
+    etl
+    FreeRTOS
 )

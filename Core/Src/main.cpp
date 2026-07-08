@@ -26,6 +26,8 @@
 #include "servo_task.h"
 #include "show_pv.h"
 #include "key_task.h"
+#include "oled_task.h"
+#include "imu_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -104,6 +106,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
   printf("__cplusplus: %ld\r\n", static_cast<long>(__cplusplus));
@@ -119,6 +122,8 @@ int main(void)
   led_task_create();
   servo_task_create();
   key_task_create();
+  oled_task_create();
+  imu_task_create();
 
   vTaskStartScheduler();
 

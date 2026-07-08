@@ -6,7 +6,7 @@
 - LCD: ILI9341 240x320 (FSMC 16-bit 8080 interface, BANK4)
 - External SRAM: IS62WV51216 1MB (FSMC BANK3, 0x68000000)
 - Touch: XPT2046 (SPI)
-- UART: USART1 PA9/PA10 115200 8N1
+- UART: USART1 PA9/PA10 115200 8N1 (printf), USART2 PA2/PA3 115200 8N1 (IMU)
 - Keys: KEY0~KEY3 (PF9/PF8/PF7/PF6, pull-up input)
 - PWM: TIM1_CH1 (PA8, motor), TIM2_CH1 (PA0, 50Hz servo)
 
@@ -40,6 +40,8 @@ main.cpp ──> lv_init/lcd_init/touch_init → tasks → vTaskStartScheduler
                 ├── key_task (prio=3): KEY0~3 scan; page nav + tune left PID Kp (+0.2)
                 ├── servo_task (prio=3): sweep servo 0~180° via TIM2_CH1
                 ├── motor_task (prio=?): speed PID loop every 10ms (未验证)
+                ├── imu_task (prio=3): UART RX interrupt → queue → feed_byte → parse_frame → semaphore notify
+                └── oled_task (prio=?): OLED display
 
 app/
 ├── inc/
@@ -69,10 +71,12 @@ middleware/
 Device/input/
 ├── inc/
 │   ├── encoder.h       # encoder base + motor_encoder (TIM) + rotary_encoder (GPIO IRQ) (未验证)
+│   ├── imu.h           # IMU 10-axis sensor, UART protocol frame parser
 │   ├── key.h           # key: debounce/click/long-press/repeat/double-click FSM
 │   └── xpt2046.h
 └── src/
     ├── encoder.cpp
+    ├── imu.cpp         # 命令发送(checksum计算) + feed_byte帧对齐 + parse_frame(0x04 raw/0x16 quat/0x26 euler)
     ├── key.cpp
     └── xpt2046.cpp
 
@@ -112,3 +116,40 @@ Device/output/
 - **LVGL Memory**: external SRAM `LV_MEM_ADR = 0x68000000`
 - **LVGL Buffers**: dual buffer (240x50x2 bytes), partial render, RGB565
 - **stm32f4xx_it.c**: `SysTick_Handler` calls `xPortSysTickHandler()`
+
+## IMU (10-axis UART sensor)
+
+- UART2 PA2/PA3, 115200 8N1
+- 协议帧格式: `0x7E 0x23 [长度] [功能字] [数据...] [校验和]`
+- 校验和: 从包头累加到校验位前，取最低字节
+- 数据是小端字节序
+- 自动上报频率默认 25Hz，可通过 `set_freq(10~100)` 调整
+- `printf` 浮点打印需 linker flag `-u _printf_float`（已在 cmake toolchain 中配置）
+
+### 协议功能字
+
+| 功能字 | 帧长 | 方向 | 内容 |
+|--------|------|------|------|
+| **0x04** | 23B | IMU→MCU | 原始数据: accel 3×int16(16/32767g) + gyro 3×int16(2000/32767°/s) + mag 3×int16(800/32767mG) |
+| **0x16** | 21B | IMU→MCU | 四元数: w/x/y/z 4×float32 |
+| **0x26** | 17B | IMU→MCU | 欧拉角: roll/pitch/yaw 3×float32 (弧度) |
+| **0x80** | 7B | MCU→IMU | 请求固件版本号 |
+| **0x01** | 8B | IMU→MCU | 返回版本号 |
+| **0x70** | 7B | MCU→IMU | 校准陀螺仪+加速度计 |
+| **0x71** | 7B | MCU→IMU | 校准磁力计 |
+| **0x73** | 8B | MCU→IMU | 校准温度 |
+| **0x60** | 7B | MCU→IMU | 设置输出频率 |
+| **0x61** | 7B | MCU→IMU | 设置算法类型(6/9轴) |
+
+### 验证状态
+
+| 功能 | 状态 |
+|------|------|
+| 接收 raw (0x04) | ✅ 已验证 |
+| 接收 quaternion (0x16) | ✅ 已验证 |
+| 接收 euler (0x26) | ✅ 已验证 |
+| get_version (0x80) | ❌ 未验证 |
+| calibration_6 (0x70) | ❌ 未验证 |
+| calibration_3 (0x71) | ❌ 未验证 |
+| set_freq (0x60) | ❌ 未验证 |
+| set_calculation (0x61) | ❌ 未验证 |
