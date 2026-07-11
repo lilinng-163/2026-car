@@ -17,7 +17,7 @@
 class soft_i2c
 {
 public:
-    soft_i2c(GPIO_TypeDef *_gpiox, uint16_t _scl, uint16_t _sda);
+    soft_i2c(GPIO_TypeDef *_gpiox, uint16_t _scl, uint16_t _sda, uint32_t _delay = 5);
 
     /**
      * @brief I2C 写事务: START + 设备地址(W) + 寄存器地址 + 数据... + STOP
@@ -37,7 +37,9 @@ private:
     GPIO_TypeDef *gpiox;
     uint16_t scl_pin;
     uint16_t sda_pin;
+    uint32_t delay_cycles;
 
+    void i2c_delay(void);
     void scl_write(int level);
     void sda_write(int level);
     int  sda_read(void);

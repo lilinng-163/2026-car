@@ -35,10 +35,10 @@ typedef struct
     float yaw;
 } posture_angles;
 
-class imu_10
+class imu_9
 {
 public:
-    imu_10(UART_HandleTypeDef *_huart);
+    imu_9(UART_HandleTypeDef *_huart);
 
     int get_version(void);
     int calibration_6(void);
@@ -78,4 +78,77 @@ private:
     posture_angles angles;
 
     bool ver_ready;
+};
+
+
+// mpu6050
+
+#include "soft_i2c.h"
+
+// ======================== 寄存器地址 ========================
+
+#define SMPLRT_DIV 		0x19    /**< 采样率分频器 */
+#define CONFIG 	   		0x1A    /**< 数字低通滤波器配置 */
+#define GYRO_CONFIG 	0x1B    /**< 陀螺仪量程配置 */
+#define ACCEL_CONFIG    0x1C    /**< 加速度计量程配置 */
+#define ACCEL_XOUT_H 	0x3B    /**< 加速度 X 轴高字节 */
+#define ACCEL_XOUT_L 	0x3C    /**< 加速度 X 轴低字节 */
+#define ACCEL_YOUT_H 	0x3D    /**< 加速度 Y 轴高字节 */
+#define ACCEL_YOUT_L	0x3E    /**< 加速度 Y 轴低字节 */
+#define ACCEL_ZOUT_H 	0x3F    /**< 加速度 Z 轴高字节 */
+#define ACCEL_ZOUT_L	0x40    /**< 加速度 Z 轴低字节 */
+#define TEMP_OUT_H 		0x41    /**< 温度高字节 */
+#define TEMP_OUT_L		0x42    /**< 温度低字节 */
+#define GYRO_XOUT_H		0x43    /**< 陀螺仪 X 轴高字节 */
+#define GYRO_XOUT_L		0x44    /**< 陀螺仪 X 轴低字节 */
+#define GYRO_YOUT_H		0x45    /**< 陀螺仪 Y 轴高字节 */
+#define GYRO_YOUT_L		0x46    /**< 陀螺仪 Y 轴低字节 */
+#define GYRO_ZOUT_H		0x47    /**< 陀螺仪 Z 轴高字节 */
+#define GYRO_ZOUT_L		0x48    /**< 陀螺仪 Z 轴低字节 */
+
+// ======================== 电源管理寄存器 ========================
+
+#define PWR_MGMT_1 0x6B          /**< 电源管理 1 (唤醒/时钟源) */
+#define PWR_MGMT_2 0x6C          /**< 电源管理 2 (轴使能) */
+
+#define WHO_AM_I   0x75          /**< 设备 ID (应返回 0x68) */
+
+// ======================== 量程配置值 ========================
+
+#define ACCEL_RANGE_2G  0x00     /**< 加速度 ±2g */
+#define ACCEL_RANGE_4G  0x08     /**< 加速度 ±4g */
+#define ACCEL_RANGE_8G  0x10     /**< 加速度 ±8g */
+#define ACCEL_RANGE_16G 0x18     /**< 加速度 ±16g */
+
+#define GYRO_RANGE_250  0x00     /**< 陀螺仪 ±250°/s */
+#define GYRO_RANGE_500  0x08     /**< 陀螺仪 ±500°/s */
+#define GYRO_RANGE_1000 0x10     /**< 陀螺仪 ±1000°/s */
+#define GYRO_RANGE_2000 0x18     /**< 陀螺仪 ±2000°/s */
+
+
+typedef struct
+{
+    float gx;
+    float gy;
+    float gz;
+    float ax;
+    float ay;
+    float az;
+    float temp;
+}mpu_6050_data_t;
+
+class imu_6
+{
+public:
+    imu_6(GPIO_TypeDef *_gpiox, uint16_t _scl, uint16_t _sda);
+    void set_dev_id(unsigned char _addr_w, unsigned char _addr_r);
+    int get_data(mpu_6050_data_t &_data_t);
+    int init(void);
+    int who_am_i(unsigned char &id);
+private:
+    mpu_6050_data_t data_t;
+    posture_angles angles;
+    soft_i2c i2c;
+    unsigned char addr_w = 0xD0;
+    unsigned char addr_r = 0xD1;
 };

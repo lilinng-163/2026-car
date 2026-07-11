@@ -1,8 +1,35 @@
+#include <cstdio>
+#include <cstdint>
+#include "stm32f407xx.h"
+#include "stm32f4xx_hal.h"
+#include "gpio.h"
 #include "motor.h"
 
-motor::motor(TIM_HandleTypeDef *_htim, uint32_t _channel)
-    : htim(_htim), channel(_channel)
+direction::direction(GPIO_TypeDef *_gpiox, uint16_t _pin1, uint16_t _pin2)
+: gpio_x(_gpiox), pin1(_pin1), pin2(_pin2)
 {
+
+}
+
+int direction::set_dir(direction::MOTOR_DIRECTION dir)
+{
+    if(dir == MOTOR_DIRECTION::forward)
+    {
+        HAL_GPIO_WritePin(gpio_x, pin1, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(gpio_x, pin2, GPIO_PIN_RESET);
+    }
+    else if(dir == MOTOR_DIRECTION::reversal)
+    {
+        HAL_GPIO_WritePin(gpio_x, pin1, GPIO_PIN_RESET);
+        HAL_GPIO_WritePin(gpio_x, pin2, GPIO_PIN_SET);      
+    }
+    return 0;
+}
+
+motor::motor(TIM_HandleTypeDef *_htim, uint32_t _channel, direction _dir)
+    : htim(_htim), channel(_channel), dir(_dir)
+{
+    
 }
 
 void motor::start(void)

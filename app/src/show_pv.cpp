@@ -30,16 +30,12 @@ static void show_pv_task(void *pv)
         // 切换页面 + 刷新 PID 参数显示（读共享 PID 对象，key_task 写、这里读）
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
         ui_page_apply();
-        pid_update_ui();
+        if (!ui_editing())
+        {
+            pid_update_ui();
+        }
         xSemaphoreGive(lvgl_mutex);
 
-        if (dht11_request)
-        {
-            dht11_request = false;
-            xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-            dht11_update_ui();
-            xSemaphoreGive(lvgl_mutex);
-        }
         vTaskDelay(pdMS_TO_TICKS(50));
     }
 }

@@ -39,22 +39,32 @@
  * See http://www.freertos.org/a00110.html
  *----------------------------------------------------------*/
 
-#define configUSE_PREEMPTION		1
-#define configUSE_IDLE_HOOK			0
-#define configUSE_TICK_HOOK			0
-#define configCPU_CLOCK_HZ			( ( unsigned long ) 168000000 )	
-#define configTICK_RATE_HZ			( ( TickType_t ) 1000 )
-#define configMAX_PRIORITIES		( 5 )
-#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 128 )
-#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 48 * 1024 ) )
-#define configMAX_TASK_NAME_LEN		( 16 )
-#define configUSE_TRACE_FACILITY	1
-#define configUSE_16_BIT_TICKS		0
-#define configIDLE_SHOULD_YIELD		1
-#define configUSE_MUTEXES			1
-#define configUSE_RECURSIVE_MUTEXES	1
-#define configSUPPORT_DYNAMIC_ALLOCATION 1
-#define configUSE_TASK_FPU_SUPPORT       1
+/*---------- Cortex-M4F 优化配置 ----------*/
+
+#define configUSE_PREEMPTION			1
+#define configUSE_IDLE_HOOK				0
+#define configUSE_TICK_HOOK				0
+#define configCPU_CLOCK_HZ				( ( unsigned long ) 168000000 )
+#define configTICK_RATE_HZ				( ( TickType_t ) 1000 )
+#define configMAX_PRIORITIES			( 5 )
+#define configMINIMAL_STACK_SIZE		( ( unsigned short ) 180 )	/* CM4F: 128+34(FPU) */
+#define configTOTAL_HEAP_SIZE			( ( size_t ) ( 48 * 1024 ) )
+#define configMAX_TASK_NAME_LEN			( 16 )
+#define configUSE_TRACE_FACILITY		1
+#define configUSE_16_BIT_TICKS			0
+#define configIDLE_SHOULD_YIELD			1
+#define configUSE_MUTEXES				1
+#define configUSE_RECURSIVE_MUTEXES		1
+#define configSUPPORT_DYNAMIC_ALLOCATION	1
+
+/* FPU: CM4F 必须开启，Lazy stacking 自动生效 */
+#define configUSE_TASK_FPU_SUPPORT		1
+/* 时间片轮转：不需要，各 task 用 vTaskDelayUntil 自定周期 */
+#define configUSE_TIME_SLICING			0
+/* Tickless idle：暂不开启，需实现 vPortSuppressTicksAndSleep */
+#define configUSE_TICKLESS_IDLE			0
+/* 溢出检查：暂不开启，需实现 vApplicationStackOverflowHook */
+#define configCHECK_FOR_STACK_OVERFLOW	0
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0

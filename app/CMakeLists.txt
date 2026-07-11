@@ -4,7 +4,7 @@ add_library(app OBJECT
     src/mutex.cpp
     src/show_pv.cpp
     src/lv_obj.cpp
-    src/motor_task.cpp
+    src/vector_pid_task.cpp
     src/servo_task.cpp
     src/key_task.cpp
     src/oled_task.cpp

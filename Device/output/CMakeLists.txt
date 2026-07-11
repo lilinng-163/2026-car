@@ -4,7 +4,6 @@ add_library(device_output OBJECT
     src/lcd.cpp
     src/led.cpp
     src/beep.cpp
-    src/dht11.cpp
     src/motor.cpp
     src/servo.cpp
     src/oled.cpp

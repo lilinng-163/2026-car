@@ -17,4 +17,5 @@ target_link_libraries(device_input PUBLIC
     lvgl
     etl
     FreeRTOS
+    soft_drivers
 )

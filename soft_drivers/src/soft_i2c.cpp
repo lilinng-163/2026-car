@@ -16,9 +16,9 @@
 //  以便开漏 + 上拉的 SCL/SDA 电平能被从机正确采样 (~几十~百 kHz)。
 //==============================================================================
 
-static inline void i2c_delay(void)
+void soft_i2c::i2c_delay(void)
 {
-    for(int i = 0; i < 10; i++)
+    for(volatile uint32_t i = 0; i < delay_cycles; i++)
     {
         __NOP();
     }
@@ -49,8 +49,8 @@ int soft_i2c::sda_read(void)
 //  构造
 //==============================================================================
 
-soft_i2c::soft_i2c(GPIO_TypeDef *_gpiox, uint16_t _scl, uint16_t _sda)
-: gpiox(_gpiox), scl_pin(_scl), sda_pin(_sda)
+soft_i2c::soft_i2c(GPIO_TypeDef *_gpiox, uint16_t _scl, uint16_t _sda, uint32_t _delay)
+: gpiox(_gpiox), scl_pin(_scl), sda_pin(_sda), delay_cycles(_delay)
 {
     scl_write(1);
     sda_write(1);
@@ -65,12 +65,24 @@ int soft_i2c::send_data(unsigned char dev_addr_w, unsigned char reg_addr,
 {
     start();
 
-    if(send_byte(dev_addr_w))  { stop(); return -1; }
-    if(send_byte(reg_addr))    { stop(); return -1; }
+    if(send_byte(dev_addr_w))  
+    { 
+        stop(); 
+        return -1; 
+    }
+    if(send_byte(reg_addr))    
+    { 
+        stop(); 
+        return -1; 
+    }
 
     for(int i = 0; i < len; i++)
     {
-        if(send_byte(data[i]))  { stop(); return -1; }
+        if(send_byte(data[i]))
+        { 
+            stop();
+            return -1; 
+        }
     }
 
     stop();
@@ -86,12 +98,24 @@ int soft_i2c::receive_data(unsigned char dev_addr_w, unsigned char reg_addr,
 {
     start();
 
-    if(send_byte(dev_addr_w))         { stop(); return -1; }
-    if(send_byte(reg_addr))           { stop(); return -1; }
+    if(send_byte(dev_addr_w))         
+    { 
+        stop(); 
+        return -1; 
+    }
+    if(send_byte(reg_addr))           
+    { 
+        stop(); 
+        return -1; 
+    }
 
     start();
 
-    if(send_byte(dev_addr_w | 0x01))  { stop(); return -1; }
+    if(send_byte(dev_addr_w | 0x01))  
+    { 
+        stop(); 
+        return -1; 
+    }
 
     for(int i = 0; i < len; i++)
     {

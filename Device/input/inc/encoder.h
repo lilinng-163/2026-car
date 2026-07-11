@@ -34,6 +34,8 @@ private:
     TIM_HandleTypeDef *htim;
     int32_t enc_lines;
     float m_circumference_mm = 0.0f;
+    uint16_t m_last_raw = 0;
+    int32_t m_total_count = 0;
     int32_t m_last_count = 0;
     uint32_t m_last_tick = 0;
 };

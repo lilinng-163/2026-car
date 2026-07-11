@@ -17,14 +17,20 @@ void motor_encoder::stop(void)
 
 int32_t motor_encoder::get_count(void)
 {
-    return static_cast<int32_t>(__HAL_TIM_GET_COUNTER(htim));
+    uint16_t raw = static_cast<uint16_t>(__HAL_TIM_GET_COUNTER(htim));
+    int16_t delta = static_cast<int16_t>(raw - m_last_raw);
+    m_last_raw = raw;
+    m_total_count += delta;
+    return m_total_count;
 }
 
 void motor_encoder::reset(void)
 {
     __HAL_TIM_SET_COUNTER(htim, 0);
+    m_last_raw = 0;
+    m_total_count = 0;
     m_last_count = 0;
-    m_last_tick = 0;
+    m_last_tick = HAL_GetTick();
 }
 
 float motor_encoder::get_speed(void)
@@ -40,7 +46,7 @@ float motor_encoder::get_speed(void)
     return speed;
 }
 
-float motor_encoder::get_rpm(void)
+float motor_encoder::get_rpm(void)  // 转/分
 {
     if (enc_lines == 0) return 0.0f;
     return get_speed() * 60000.0f / static_cast<float>(enc_lines * 4);

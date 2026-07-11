@@ -3,7 +3,7 @@
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "key.h"
-#include "motor_task.h"
+#include "vector_pid_task.h"
 #include "lv_obj.h"
 
 static constexpr const char *NAME  = "key";

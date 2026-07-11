@@ -12,10 +12,13 @@ static constexpr UBaseType_t PRIO = 1;
 static void lvgl_task(void *pv) {
     (void)pv;
     printf("lvgl start\n");
-    while (1) 
+    TickType_t last = xTaskGetTickCount();
+    while (1)
     {
         xSemaphoreTake(lvgl_mutex, portMAX_DELAY);
-        lv_tick_inc(5);
+        TickType_t now = xTaskGetTickCount();
+        lv_tick_inc((now - last) * portTICK_PERIOD_MS);
+        last = now;
         lv_timer_handler();
         xSemaphoreGive(lvgl_mutex);
         vTaskDelay(pdMS_TO_TICKS(5));
