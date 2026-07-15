@@ -8,10 +8,11 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "adc.h"
+#include "dma.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
-#include "fsmc.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -29,6 +30,7 @@
 #include "oled_task.h"
 #include "vector_pid_task.h"
 #include "imu_task.h"
+#include "tracking_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -69,6 +71,14 @@ int __io_putchar(int ch) {
     HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
     return ch;
 }
+
+/* FreeRTOS 栈溢出钩子：打印溢出任务名并停住，便于定位 */
+void vApplicationStackOverflowHook(TaskHandle_t xTask, char *pcTaskName) {
+    (void)xTask;
+    printf("!!! STACK OVERFLOW in task: %s\r\n", pcTaskName);
+    __disable_irq();
+    for (;;) {}
+}
 #ifdef __cplusplus
 }
 #endif
@@ -102,30 +112,34 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_FSMC_Init();
+  MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   MX_TIM3_Init();
+  MX_ADC1_Init();
+  MX_USART3_UART_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
+  setvbuf(stdout, NULL, _IONBF, 0);
 
   printf("__cplusplus: %ld\r\n", static_cast<long>(__cplusplus));
   printf("GCC VERSION: %d.%d.%d\r\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
-  lv_init();
-  lcd_init();
-  lv_port_touch_init();
+  // lv_init();
+  // lcd_init();
+  // lv_port_touch_init();
 
-  lvgl_mutex_init();
+  // lvgl_mutex_init();
 
-  lvgl_task_create();
-  show_pv_create();
+  // lvgl_task_create();
+  // show_pv_create();
   led_task_create();
-  servo_task_create();
-  key_task_create();
+  // servo_task_create();
+  // key_task_create();
   oled_task_create();
   vector_pid_task_create();
   // imu_task_create();
+  tracking_task_create();
 
   vTaskStartScheduler();
 

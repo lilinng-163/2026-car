@@ -8,6 +8,7 @@
 #include "usart.h"
 #include "imu.h"
 #include "imu_task.h"
+#include "debug_print.h"
 #include "etl/vector.h"
 
 static constexpr const char *NAME  = "imu";
@@ -51,27 +52,27 @@ static void imu_task(void *pv)
 
     unsigned char id = 0;
     int wret = mpu6050.who_am_i(id);
-    printf("who_am_i ret = %d, id = 0x%02X (expect 0x68)\r\n", wret, id);
+    IMU_DBG("who_am_i ret = %d, id = 0x%02X (expect 0x68)\r\n", wret, id);
 
     int ret = mpu6050.init();
-    printf("mpu6050 init ret = %d\r\n", ret);
+    IMU_DBG("mpu6050 init ret = %d\r\n", ret);
     while(ret != 0)
     {
         vTaskDelay(pdMS_TO_TICKS(100));
         ret = mpu6050.init();
-        printf("mpu6050 retry init ret = %d\r\n", ret);
+        IMU_DBG("mpu6050 retry init ret = %d\r\n", ret);
     }
 
     while(1)
     {
         int r = mpu6050.get_data(data);
-        printf("get_data ret = %d\r\n", r);
-        printf("ax: %f\r\n", data.ax);
-        printf("ay: %f\r\n", data.ay);
-        printf("az: %f\r\n", data.az);
-        printf("gx: %f\r\n", data.gx);
-        printf("gy: %f\r\n", data.gy);
-        printf("gz: %f\r\n", data.gz);
+        IMU_DBG("get_data ret = %d\r\n", r);
+        IMU_DBG("ax: %f\r\n", data.ax);
+        IMU_DBG("ay: %f\r\n", data.ay);
+        IMU_DBG("az: %f\r\n", data.az);
+        IMU_DBG("gx: %f\r\n", data.gx);
+        IMU_DBG("gy: %f\r\n", data.gy);
+        IMU_DBG("gz: %f\r\n", data.gz);
 
         vTaskDelay(pdMS_TO_TICKS(500));
         // uint8_t byte;

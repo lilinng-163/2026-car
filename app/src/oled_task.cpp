@@ -3,71 +3,53 @@
 #include "FreeRTOS/task.h"
 #include "main.h"
 #include "oled.h"
+#include "vector_pid_task.h"
 #include "oled_task.h"
+#include "debug_print.h"
 
 static constexpr const char *NAME  = "oled";
-static constexpr configSTACK_DEPTH_TYPE STACK = 512;
-static constexpr UBaseType_t PRIO = 2;
+static constexpr configSTACK_DEPTH_TYPE STACK = 1024;
+static constexpr UBaseType_t PRIO = 3;
 
 static void oled_task(void *pv) {
     (void)pv;
-    printf("oled start\n");
+    OLED_DBG("oled start\r\n");
     static oled096 o(GPIOB, GPIO_PIN_3, GPIO_PIN_4);
 
-    int counter = 0;
+    char buf[32];
     while (1) {
-        // --- 测试 1: 字符串显示 (每行 8x16) ---
-        o.clear();
-        o.show_string("Hello World", 0, 0);
-        o.show_string("0123456789", 0, 16);
-        o.show_string("ABCabc!@#$%", 0, 32);
-        o.show_string("STM32F407", 0, 48);
-        o.refresh();
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        vTaskDelay(pdMS_TO_TICKS(200));
 
-        // --- 测试 2: 数字显示 (自增/负数) ---
         o.clear();
-        o.show_string("num:", 0, 0);
-        o.show_num(counter, 40, 0);
-        o.show_string("neg:", 0, 16);
-        o.show_num(-counter, 40, 16);
-        o.refresh();
-        vTaskDelay(pdMS_TO_TICKS(2000));
 
-        // --- 测试 3: 像素 —— 画边框 + 对角线 ---
-        o.clear();
-        for (uint16_t x = 0; x < 128; x++) {
-            o.set_pixel(x, 0);
-            o.set_pixel(x, 63);
-        }
-        for (uint16_t y = 0; y < 64; y++) {
-            o.set_pixel(0, y);
-            o.set_pixel(127, y);
-        }
-        for (uint16_t i = 0; i < 64; i++) {
-            o.set_pixel(i * 2, i);
-        }
-        o.refresh();
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        // Line 0: setpoint (SP)
+        snprintf(buf, sizeof(buf), "SP L%-4d R%-4d",
+                 static_cast<int>(left_setpoint_rpm),
+                 static_cast<int>(right_setpoint_rpm));
+        o.show_string(buf, 0, 0);
 
-        // --- 测试 4: clear_pixel —— 在实心块上挖洞 ---
-        o.clear();
-        for (uint16_t x = 20; x < 108; x++)
-            for (uint16_t y = 16; y < 48; y++)
-                o.set_pixel(x, y);
-        for (uint16_t x = 40; x < 88; x++)
-            for (uint16_t y = 24; y < 40; y++)
-                o.clear_pixel(x, y);
-        o.refresh();
-        vTaskDelay(pdMS_TO_TICKS(2000));
+        // Line 1: actual (AC)
+        snprintf(buf, sizeof(buf), "AC L%-4d R%-4d",
+                 static_cast<int>(left_actual_rpm),
+                 static_cast<int>(right_actual_rpm));
+        o.show_string(buf, 0, 16);
 
-        // --- 测试 5: 清屏 ---
-        o.clear();
-        o.show_string("Clear...", 0, 24);
-        o.refresh();
-        vTaskDelay(pdMS_TO_TICKS(1000));
+        // Line 2: output (OT)
+        snprintf(buf, sizeof(buf), "OT L%-4d R%-4d",
+                 static_cast<int>(left_out_val),
+                 static_cast<int>(right_out_val));
+        o.show_string(buf, 0, 32);
 
-        counter += 123;
+        // Line 3: voltage + track_pid Kp
+        float tkp = track_pid.get_instance().Kp;
+        snprintf(buf, sizeof(buf), "V%d.%dV %d.%02d",
+                 static_cast<int>(vin_actual),
+                 static_cast<int>(vin_actual * 10.0f) % 10,
+                 static_cast<int>(tkp),
+                 static_cast<int>(tkp * 100.0f) % 100);
+        o.show_string(buf, 0, 48);
+
+        o.refresh();
     }
 }
 

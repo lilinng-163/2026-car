@@ -5,6 +5,17 @@
 
 extern pid left_motor_pid;
 extern pid right_motor_pid;
+extern pid track_pid;
+
+extern volatile float left_base_rpm;
+extern volatile float right_base_rpm;
+extern volatile float left_actual_rpm;
+extern volatile float right_actual_rpm;
+extern volatile float left_setpoint_rpm;
+extern volatile float right_setpoint_rpm;
+extern volatile float left_out_val;
+extern volatile float right_out_val;
+extern volatile float vin_actual;
 
 void vector_pid_task_create(void);
 

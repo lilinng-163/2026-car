@@ -9,6 +9,7 @@ add_library(app OBJECT
     src/key_task.cpp
     src/oled_task.cpp
     src/imu_task.cpp
+    src/tracking_task.cpp
 )
 
 target_include_directories(app PUBLIC

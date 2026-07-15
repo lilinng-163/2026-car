@@ -1,7 +1,7 @@
 #include "encoder.h"
 
-motor_encoder::motor_encoder(TIM_HandleTypeDef *_htim, int32_t _lines)
-    : htim(_htim), enc_lines(_lines)
+motor_encoder::motor_encoder(TIM_HandleTypeDef *_htim, int32_t _lines, bool _invert)
+    : htim(_htim), enc_lines(_lines), m_invert(_invert)
 {
 }
 
@@ -20,7 +20,7 @@ int32_t motor_encoder::get_count(void)
     uint16_t raw = static_cast<uint16_t>(__HAL_TIM_GET_COUNTER(htim));
     int16_t delta = static_cast<int16_t>(raw - m_last_raw);
     m_last_raw = raw;
-    m_total_count += delta;
+    m_total_count += m_invert ? -delta : delta;
     return m_total_count;
 }
 

@@ -16,7 +16,7 @@ public:
 class motor_encoder : public encoder
 {
 public:
-    motor_encoder(TIM_HandleTypeDef *_htim, int32_t _lines);
+    motor_encoder(TIM_HandleTypeDef *_htim, int32_t _lines, bool _invert = false);
 
     void start(void) override;
     void stop(void) override;
@@ -33,6 +33,7 @@ public:
 private:
     TIM_HandleTypeDef *htim;
     int32_t enc_lines;
+    bool m_invert = false;
     float m_circumference_mm = 0.0f;
     uint16_t m_last_raw = 0;
     int32_t m_total_count = 0;

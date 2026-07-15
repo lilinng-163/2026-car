@@ -3,6 +3,7 @@
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "lvgl.h"
+#include "debug_print.h"
 #include <cstdio>
 
 static constexpr const char *NAME  = "lvgl";
@@ -11,7 +12,7 @@ static constexpr UBaseType_t PRIO = 1;
 
 static void lvgl_task(void *pv) {
     (void)pv;
-    printf("lvgl start\n");
+    LVGL_DBG("lvgl start\n");
     TickType_t last = xTaskGetTickCount();
     while (1)
     {

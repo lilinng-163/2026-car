@@ -69,8 +69,10 @@ void Error_Handler(void);
 #define KEY1_GPIO_Port GPIOF
 #define KEY0_Pin GPIO_PIN_9
 #define KEY0_GPIO_Port GPIOF
-#define LEFT_MOTOR_PWM_Pin GPIO_PIN_1
+#define LEFT_MOTOR_PWM_Pin GPIO_PIN_0
 #define LEFT_MOTOR_PWM_GPIO_Port GPIOA
+#define RIGHT_TMOTOR_PWM_Pin GPIO_PIN_1
+#define RIGHT_TMOTOR_PWM_GPIO_Port GPIOA
 #define LEFT_MOTOR_EA_Pin GPIO_PIN_6
 #define LEFT_MOTOR_EA_GPIO_Port GPIOA
 #define LEFT_MOTOR_B_Pin GPIO_PIN_7
@@ -79,8 +81,6 @@ void Error_Handler(void);
 #define LEFT_MOTOR_IN1_GPIO_Port GPIOB
 #define LEFT_MOTOR_IN2_Pin GPIO_PIN_1
 #define LEFT_MOTOR_IN2_GPIO_Port GPIOB
-#define RIGHT_MOTOR_PWM_Pin GPIO_PIN_10
-#define RIGHT_MOTOR_PWM_GPIO_Port GPIOB
 #define BEEP_Pin GPIO_PIN_7
 #define BEEP_GPIO_Port GPIOG
 #define MPU6050_SCL_Pin GPIO_PIN_6
@@ -99,10 +99,6 @@ void Error_Handler(void);
 #define OLED096_SCL_GPIO_Port GPIOB
 #define OLED096_SDA_Pin GPIO_PIN_4
 #define OLED096_SDA_GPIO_Port GPIOB
-#define RIGHT_MOTOR_EA_Pin GPIO_PIN_6
-#define RIGHT_MOTOR_EA_GPIO_Port GPIOB
-#define RIGHT_MOTOR_EB_Pin GPIO_PIN_7
-#define RIGHT_MOTOR_EB_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

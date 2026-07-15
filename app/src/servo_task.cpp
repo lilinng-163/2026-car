@@ -12,28 +12,29 @@ static void servo_task(void *pv)
 {
     (void)pv;
 
-    servo s(&htim2, TIM_CHANNEL_1);
+    // servo s(&htim2, TIM_CHANNEL_1);
 
     float angle = 0.0f;
     int8_t dir = 1;
 
     while (1)
     {
-        s.set_angle(angle);
+        // s.set_angle(angle);
 
-        angle += dir * 2.0f;
-        if (angle >= 180.0f)
-        {
-            angle = 180.0f;
-            dir = -1;
-        }
-        else if (angle <= 0.0f)
-        {
-            angle = 0.0f;
-            dir = 1;
-        }
+        // angle += dir * 2.0f;
+        // if (angle >= 180.0f)
+        // {
+        //     angle = 180.0f;
+        //     dir = -1;
+        // }
+        // else if (angle <= 0.0f)
+        // {
+        //     angle = 0.0f;
+        //     dir = 1;
+        // }
 
-        vTaskDelay(pdMS_TO_TICKS(20));
+        // vTaskDelay(pdMS_TO_TICKS(20));
+        vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
 

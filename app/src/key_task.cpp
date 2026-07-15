@@ -5,6 +5,7 @@
 #include "key.h"
 #include "vector_pid_task.h"
 #include "lv_obj.h"
+#include "debug_print.h"
 
 static constexpr const char *NAME  = "key";
 static constexpr configSTACK_DEPTH_TYPE STACK = 1024;
@@ -17,7 +18,7 @@ static void key_task(void *pv)
     key k1(GPIOF, GPIO_PIN_8);
     key k2(GPIOF, GPIO_PIN_7);
     key k3(GPIOF, GPIO_PIN_6);
-    printf("key_task start\n");
+    KEY_DBG("key_task start\n");
 
     while (1) 
     {
@@ -27,7 +28,7 @@ static void key_task(void *pv)
             taskENTER_CRITICAL();
             ui_page_prev();
             taskEXIT_CRITICAL();
-            printf("key1 click -> prev page\r\n");
+            KEY_DBG("key1 click -> prev page\r\n");
         }
 
         // key3：下一页（page++），临界区只改标志位
@@ -36,7 +37,7 @@ static void key_task(void *pv)
             taskENTER_CRITICAL();
             ui_page_next();
             taskEXIT_CRITICAL();
-            printf("key3 click -> next page\r\n");
+            KEY_DBG("key3 click -> next page\r\n");
         }
 
         // key0：左电机 Kp += 0.2（共享 PID 对象，show_pv 只读刷新）
@@ -44,14 +45,14 @@ static void key_task(void *pv)
         {
             arm_pid_instance_f32 l = left_motor_pid.get_instance();
             left_motor_pid.set_gains(l.Kp + 0.2f, l.Ki, l.Kd);
-            printf("k0 click -> left_motor_pid_kp + 0.2\r\n");
+            KEY_DBG("k0 click -> left_motor_pid_kp + 0.2\r\n");
         }
         // key2：左电机 Kp -= 0.2
         if(k2.key_tick() == key_event::click)
         {
             arm_pid_instance_f32 l = left_motor_pid.get_instance();
             left_motor_pid.set_gains(l.Kp - 0.2f, l.Ki, l.Kd);
-            printf("k0 click -> left_motor_pid_kp - 0.2\r\n");
+            KEY_DBG("k0 click -> left_motor_pid_kp - 0.2\r\n");
         }
 
         vTaskDelay(pdMS_TO_TICKS(10));

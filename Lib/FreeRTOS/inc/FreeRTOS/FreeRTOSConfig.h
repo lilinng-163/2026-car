@@ -63,8 +63,8 @@
 #define configUSE_TIME_SLICING			0
 /* Tickless idle：暂不开启，需实现 vPortSuppressTicksAndSleep */
 #define configUSE_TICKLESS_IDLE			0
-/* 溢出检查：暂不开启，需实现 vApplicationStackOverflowHook */
-#define configCHECK_FOR_STACK_OVERFLOW	0
+/* 溢出检查：方案2(填充哨兵)，需实现 vApplicationStackOverflowHook */
+#define configCHECK_FOR_STACK_OVERFLOW	2
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0
