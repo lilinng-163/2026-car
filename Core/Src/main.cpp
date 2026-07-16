@@ -63,6 +63,7 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 #include <stdio.h>
+#include "FreeRTOS/semphr.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,6 +71,19 @@ extern "C" {
 int __io_putchar(int ch) {
     HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
     return ch;
+}
+
+/* 多任务 printf 互斥：防止并发调 HAL_UART_Transmit 时返回 BUSY 丢字符 */
+static SemaphoreHandle_t print_mutex = NULL;
+
+int _write(int file, char *ptr, int len) {
+    (void)file;
+    bool lock = (print_mutex != NULL) &&
+                (xTaskGetSchedulerState() == taskSCHEDULER_RUNNING);
+    if (lock) xSemaphoreTake(print_mutex, portMAX_DELAY);
+    HAL_UART_Transmit(&huart1, (uint8_t *)ptr, (uint16_t)len, HAL_MAX_DELAY);
+    if (lock) xSemaphoreGive(print_mutex);
+    return len;
 }
 
 /* FreeRTOS 栈溢出钩子：打印溢出任务名并停住，便于定位 */
@@ -121,8 +135,40 @@ int main(void)
   MX_USART3_UART_Init();
   MX_TIM4_Init();
   /* USER CODE BEGIN 2 */
-  setvbuf(stdout, NULL, _IONBF, 0);
+  // 行缓冲: 每行凑齐后由 _write 一次性发出，配合 print_mutex 保证各任务整行原子输出
+  static char stdout_buf[256];
+  setvbuf(stdout, stdout_buf, _IOLBF, sizeof(stdout_buf));
+  print_mutex = xSemaphoreCreateMutex();
 
+    printf(
+      " __        __   _  ____  \n"
+      " \\ \\      / /__| |/ ___|___  _ __ ___   ___\n"
+      "  \\ \\ /\\ / / _ \\ | |   / _ \\| '_ ` _ \\ / _ \\\n"
+      "   \\ V  V /  __/ | |__| (_) | | | | | |  __/\n"
+      "    \\_/\\_/ \\___|_|\\____\\___/|_| |_| |_|\\___|\n");
+    printf(
+      "____   ___ ____   __   \n"
+      "|___ \\ / _ \\___ \\ / /_  \n"
+      "  __) | | | |__) | '_ \\ \n"
+      " / __/| |_| / __/| (_) |\n"
+      "|_____|\\___/_____|\\___/ \n"
+      );
+  printf(
+      "_____ _           _                   _   \n"
+      "| ____| | ___  ___| |_ _ __ ___  _ __ (_) ___ \n"
+      "|  _| | |/ _ \\/ __| __| '__/ _ \\| '_ \\| |/ __|\n"
+      "| |___| |  __/ (__| |_| | | (_) | | | | | (__ \n"
+      "|_____|_|\\___|\\___|\\__|_|  \\___/|_| |_|_|\\___|\n"
+      "\n"
+      "  ____                           _   _ _   _   \n"
+      " / ___|___  _ __ ___  _ __   ___| |_(_) |_(_) ___  _ __ \n"
+      "| |   / _ \\| '_ ` _ \\| '_ \\ / _ \\ __| | __| |/ _ \\| '_ \\ \n"
+      "| |__| (_) | | | | | | |_) |  __/ |_| | |_| | (_) | | | |\n"
+      " \\____\\___/|_| |_| |_| .__/ \\___|\\__|_|\\__|_|\\___/|_| |_|\n"
+      "                     |_|   \n"
+      );
+  printf("author: lilinng\r\n");
+  printf("email: wangyixiang051129@163.com || yi9597402@gmail.com\r\n");
   printf("__cplusplus: %ld\r\n", static_cast<long>(__cplusplus));
   printf("GCC VERSION: %d.%d.%d\r\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
   // lv_init();
@@ -135,7 +181,7 @@ int main(void)
   // show_pv_create();
   led_task_create();
   // servo_task_create();
-  // key_task_create();
+  key_task_create();
   oled_task_create();
   vector_pid_task_create();
   // imu_task_create();

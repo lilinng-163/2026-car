@@ -13,8 +13,8 @@
 
 // 双电机速度环：编码器测速 -> PID -> PWM 输出（未验证）
 
-volatile float left_base_rpm  = 5000.0f;
-volatile float right_base_rpm = 5000.0f;
+volatile float left_base_rpm  = 1000.0f;
+volatile float right_base_rpm = 1000.0f;
 volatile float left_actual_rpm    = 0.0f;
 volatile float right_actual_rpm   = 0.0f;
 volatile float left_setpoint_rpm  = 0.0f;
@@ -27,8 +27,8 @@ static constexpr configSTACK_DEPTH_TYPE STACK = 1024;
 static constexpr UBaseType_t PRIO = 4;
 static constexpr float TS = 0.01f;   // 采样周期 10ms
 
-// 电压前馈相关
-static volatile uint16_t adc_raw = 0;   // DMA 循环写入的电压通道原始值
+// 电压前馈相关 PA4
+static volatile uint32_t adc_raw = 0;   // DMA 循环写入的电压通道原始值
 static constexpr float ADC_VREF   = 3.3f;    // ADC 参考电压
 static constexpr float ADC_FULL   = 4095.0f; // 12 位满量程
 static constexpr float DIV_RATIO  = 11.0f;   // 分压比 (10K+1K)/1K
@@ -41,14 +41,14 @@ static float read_vin(void)
     return static_cast<float>(adc_raw) / ADC_FULL * ADC_VREF * DIV_RATIO;
 }
 
-direction left_dir(GPIOB, GPIO_PIN_0, GPIO_PIN_1);  // in1:PB0  in2:PB1 
-direction right_dir(GPIOC, GPIO_PIN_8, GPIO_PIN_9); // in1:PC8      in2:PC9
+direction left_dir(GPIOB, GPIO_PIN_0, GPIO_PIN_1);  // in1:PB1  in2:PB0
+direction right_dir(GPIOC, GPIO_PIN_8, GPIO_PIN_9); // in1:PC9      in2:PC8
 
 motor left_motor(&htim2, TIM_CHANNEL_1, left_dir);  // PA0
 motor right_motor(&htim2, TIM_CHANNEL_2, right_dir);    // PA1
 
 motor_encoder left_enc(&htim3, 13);     // a: PA6   b: PA7
-motor_encoder right_enc(&htim4, 13, true);    // a: PD12   b: PD13 
+motor_encoder right_enc(&htim4, 13, true);    // a: PD12   b: PD13
 
 // 外环
 pid track_pid(1000.0f, 0.0f, 0.0f, TS, -2000.0f, 2000.0f);
@@ -164,9 +164,6 @@ static void vector_pid_task_entry(void *pv)
         // left_setpoint_rpm = left_base_rpm + track_fix;
         // right_setpoint_rpm = right_base_rpm - track_fix;
 
-        left_setpoint_rpm = left_base_rpm;
-        right_setpoint_rpm = right_base_rpm;
-
         float left_out  = left_motor_pid.calculate(left_setpoint_rpm, l_rpm_f) * ff;
         float right_out = right_motor_pid.calculate(right_setpoint_rpm, r_rpm_f) * ff;
 
@@ -188,12 +185,12 @@ static void vector_pid_task_entry(void *pv)
             VECPID_DBG("L cnt=%ld raw=%u rpm=%ld sp=%ld out=%ld ccr=%u d=%d%d\r\n",
                    (long)l_cnt, (unsigned)__HAL_TIM_GET_COUNTER(&htim3),
                    (long)l_rpm_f, (long)left_setpoint_rpm, (long)left_out,
-                   (unsigned)TIM2->CCR2,
+                   (unsigned)TIM2->CCR1,
                    HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0), HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_1));
             VECPID_DBG("R cnt=%ld raw=%u rpm=%ld sp=%ld out=%ld ccr=%u d=%d%d vin=%ldmv\r\n",
                    (long)r_cnt, (unsigned)__HAL_TIM_GET_COUNTER(&htim4),
                    (long)r_rpm_f, (long)right_setpoint_rpm, (long)right_out,
-                   (unsigned)TIM2->CCR3,
+                   (unsigned)TIM2->CCR2,
                    HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8), HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9),
                    (long)(vin * 1000));
         }

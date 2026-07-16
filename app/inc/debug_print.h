@@ -4,7 +4,7 @@
 
 // ── 各任务调试打印总开关：1 开启 / 0 关闭 ──
 #define DEBUG_IMU_TASK      0
-#define DEBUG_KEY_TASK      0
+#define DEBUG_KEY_TASK      1
 #define DEBUG_LED_TASK      0
 #define DEBUG_LVGL_TASK     0
 #define DEBUG_MUTEX         0
