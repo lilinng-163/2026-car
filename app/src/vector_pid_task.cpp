@@ -8,13 +8,14 @@
 #include "encoder.h"
 #include "pid.h"
 #include "tracking_task.h"
+#include "imu_task.h"
 #include "vector_pid_task.h"
 #include "debug_print.h"
 
 // 双电机速度环：编码器测速 -> PID -> PWM 输出（未验证）
 
-volatile float left_base_rpm  = 1000.0f;
-volatile float right_base_rpm = 1000.0f;
+volatile float left_base_rpm  = 5000.0f;
+volatile float right_base_rpm = 5000.0f;
 volatile float left_actual_rpm    = 0.0f;
 volatile float right_actual_rpm   = 0.0f;
 volatile float left_setpoint_rpm  = 0.0f;
@@ -50,14 +51,20 @@ motor right_motor(&htim2, TIM_CHANNEL_2, right_dir);    // PA1
 motor_encoder left_enc(&htim3, 13);     // a: PA6   b: PA7
 motor_encoder right_enc(&htim4, 13, true);    // a: PD12   b: PD13
 
-// 外环
-pid track_pid(1000.0f, 0.0f, 0.0f, TS, -2000.0f, 2000.0f);
+volatile float steer_kp = 0.5f;    // P: err=1时差速占基础转速的比例
+volatile float steer_kd = 0.03f;   // D: 阻尼 err 变化率，防振荡
+volatile float gz_k     = 0.001f;    // 陀螺仪Z轴角速度阻尼系数
+
 // 内环
 // 注意：限幅在任务里 set_limits() 设置。
 // 不能在此用 left_motor.get_period()，静态初始化早于 MX_TIM2_Init，此时 Period 还是 0
 // 起始增益按 period=4200(g≈2.45 RPM/count)估算：Ki≈1/(g·20)≈0.02, Kp≈3Ki≈0.05, Kd=0
 pid left_motor_pid (0.8f, 0.05f, 0.0f, TS, -100.0f, 100.0f);
 pid right_motor_pid(0.8f, 0.05f, 0.0f, TS, -100.0f, 100.0f);
+pid yaw_pid(1.0f, 0.0f, 0.0f, TS, -1.0f, 1.0f);
+
+volatile float target_yaw = 0.0f;
+volatile float yaw_gain   = 0.0f;    // yaw PID 输出 × base_rpm 为 track_fix 贡献上限
 
 // 把 PID 输出施加到电机：符号决定方向，绝对值作占空比
 static void motor_apply_output(motor &mot, float out)
@@ -113,6 +120,11 @@ static void vector_pid_task_entry(void *pv)
     left_enc.get_count();
     right_enc.get_count();
 
+    // 上电锁死当前航向作为直行目标
+    target_yaw = imu_yaw;
+    VECPID_DBG("vecpid: yaw locked at %d.%02d\r\n",
+               (int)target_yaw, (int)(target_yaw * 100.0f) % 100);
+
     TickType_t last_wake = xTaskGetTickCount();
     static constexpr TickType_t ticks = pdMS_TO_TICKS(10);
 
@@ -151,18 +163,39 @@ static void vector_pid_task_entry(void *pv)
         r_rpm_f += ALPHA * (r_rpm - r_rpm_f);
 
         left_actual_rpm  = l_rpm_f;   // 缓存供 UI 读取
-        right_actual_rpm = r_rpm_f;
-
+        right_actual_rpm = r_rpm_f; 
+        // 12v -> 10k -> 1k ->gnd
         // 电压前馈系数：实测电压越低，占空比补得越大，保持有效电压一致
         float vin = read_vin();
         vin_actual = vin;
         if (vin < 1.0f) vin = V_NOMINAL;      // ADC 异常/未接时退回标称，避免除小数放大
         float ff = V_NOMINAL / vin;
 
-        // setpoint这里需要接入循迹pid，得到真正的dream值
-        // float track_fix = track_pid.calculate(middle, err);
-        // left_setpoint_rpm = left_base_rpm + track_fix;
-        // right_setpoint_rpm = right_base_rpm - track_fix;
+        // 巡线修正: track_fix = 巡线p + gz摇摆修正 + yaw航向修正
+
+        // 纯p调参无需pid
+        static float prev_err = 0.0f;
+        float err_rate = (err - prev_err) / TS;
+        prev_err = err;
+        float track_fix = (steer_kp * err + steer_kd * err_rate) * left_base_rpm;
+
+        // gz修正蛇形
+        track_fix += gz_k * imu_gz;
+
+        // yaw航向修正：归化到 target 的 ±π 范围内，走最短路径
+        float yaw_meas = imu_yaw;
+        while (yaw_meas - target_yaw >  M_PI) yaw_meas -= 2.0f * M_PI;
+        while (yaw_meas - target_yaw < -M_PI) yaw_meas += 2.0f * M_PI;
+        float yaw_out = yaw_pid.calculate(target_yaw, yaw_meas);
+        track_fix += yaw_out * yaw_gain * left_base_rpm;
+        
+        // 增加偏置
+        if (track_fix > left_base_rpm)  track_fix = left_base_rpm;
+        if (track_fix < -left_base_rpm) track_fix = -left_base_rpm;
+
+        // 最终期望
+        left_setpoint_rpm = left_base_rpm + track_fix;
+        right_setpoint_rpm = right_base_rpm - track_fix;
 
         float left_out  = left_motor_pid.calculate(left_setpoint_rpm, l_rpm_f) * ff;
         float right_out = right_motor_pid.calculate(right_setpoint_rpm, r_rpm_f) * ff;

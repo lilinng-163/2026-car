@@ -348,7 +348,7 @@ static lv_obj_t *page2(lv_obj_t *parent)
         lv_obj_t *sw = lv_switch_create(row);
         apply_switch_style(sw);
 
-        lv_obj_add_event_cb(sw, [](lv_event_t *e)
+        lv_obj_add_event_cb(sw, [](lv_event_t *e) 
         {
             lv_obj_t *sw_ = lv_event_get_target_obj(e);
             lv_obj_t *lbl = (lv_obj_t *)lv_event_get_user_data(e);

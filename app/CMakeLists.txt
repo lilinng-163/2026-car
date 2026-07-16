@@ -10,6 +10,7 @@ add_library(app OBJECT
     src/oled_task.cpp
     src/imu_task.cpp
     src/tracking_task.cpp
+    src/uart_isr.cpp
 )
 
 target_include_directories(app PUBLIC

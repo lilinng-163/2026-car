@@ -74,35 +74,54 @@ static void show_page1(oled096 &o, char *buf, size_t len)
     o.show_string(buf, 0, 48);
 }
 
-// 页2：循迹 PID 增益调节 + 当前位置/误差
+// 页2：STEER_KP / STEER_KD / GZ_K + 当前位置/误差
 static void show_page2(oled096 &o, char *buf, size_t len)
 {
-    arm_pid_instance_f32 t = track_pid.get_instance();
-
-    snprintf(buf, len, "%cKp %d",
+    snprintf(buf, len, "%cSTEER_KP %d.%02d",
              (tune_select == TUNE_T_KP) ? '>' : ' ',
-             static_cast<int>(t.Kp));
+             static_cast<int>(steer_kp), static_cast<int>(steer_kp * 100.0f) % 100);
     o.show_string(buf, 0, 0);
 
-    snprintf(buf, len, "%cKi %d.%02d",
-             (tune_select == TUNE_T_KI) ? '>' : ' ',
-             static_cast<int>(t.Ki), static_cast<int>(t.Ki * 100.0f) % 100);
+    snprintf(buf, len, "%cSTEER_KD %d.%03d",
+             (tune_select == TUNE_T_KD) ? '>' : ' ',
+             static_cast<int>(steer_kd), static_cast<int>(steer_kd * 1000.0f) % 1000);
     o.show_string(buf, 0, 16);
 
-    snprintf(buf, len, "%cKd %d.%02d",
-             (tune_select == TUNE_T_KD) ? '>' : ' ',
-             static_cast<int>(t.Kd), static_cast<int>(t.Kd * 100.0f) % 100);
+    snprintf(buf, len, "%cGZ_K    %d.%04d",
+             (tune_select == TUNE_GZ_K) ? '>' : ' ',
+             static_cast<int>(gz_k), static_cast<int>(gz_k * 10000.0f) % 10000);
     o.show_string(buf, 0, 32);
 
-    // 当前位置(0~7)与误差(pos-3.5)
-    float p = pos;
-    float e = err;
-    char es = (e < 0.0f) ? '-' : '+';
-    float ea = (e < 0.0f) ? -e : e;
-    snprintf(buf, len, "P%d.%02d E%c%d.%02d P3",
-             static_cast<int>(p), static_cast<int>(p * 100.0f) % 100,
-             es,
-             static_cast<int>(ea), static_cast<int>(ea * 100.0f) % 100);
+    snprintf(buf, len, "             P3");
+    o.show_string(buf, 0, 48);
+}
+
+// 页3：YAW PID 增益 + 当前yaw/hdg
+static void show_page3(oled096 &o, char *buf, size_t len)
+{
+    arm_pid_instance_f32 y = yaw_pid.get_instance();
+
+    snprintf(buf, len, "%cY_KP  %d.%02d",
+             (tune_select == TUNE_Y_KP) ? '>' : ' ',
+             static_cast<int>(y.Kp), static_cast<int>(y.Kp * 100.0f) % 100);
+    o.show_string(buf, 0, 0);
+
+    snprintf(buf, len, "%cY_KI  %d.%02d",
+             (tune_select == TUNE_Y_KI) ? '>' : ' ',
+             static_cast<int>(y.Ki), static_cast<int>(y.Ki * 100.0f) % 100);
+    o.show_string(buf, 0, 16);
+
+    snprintf(buf, len, "%cY_KD  %d.%02d",
+             (tune_select == TUNE_Y_KD) ? '>' : ' ',
+             static_cast<int>(y.Kd), static_cast<int>(y.Kd * 100.0f) % 100);
+    o.show_string(buf, 0, 32);
+
+    snprintf(buf, len, "%cY_GAIN %d.%02d",
+             (tune_select == TUNE_Y_GAIN) ? '>' : ' ',
+             static_cast<int>(yaw_gain), static_cast<int>(yaw_gain * 100.0f) % 100);
+    o.show_string(buf, 0, 32);
+
+    snprintf(buf, len, "             P4");
     o.show_string(buf, 0, 48);
 }
 
@@ -127,6 +146,9 @@ static void oled_task(void *pv) {
             break;
         case 2:
             show_page2(o, buf, sizeof(buf));
+            break;
+        case 3:
+            show_page3(o, buf, sizeof(buf));
             break;
         default:
             break;

@@ -5,7 +5,12 @@
 
 extern pid left_motor_pid;
 extern pid right_motor_pid;
-extern pid track_pid;
+extern pid yaw_pid;
+extern volatile float steer_kp;
+extern volatile float steer_kd;
+extern volatile float gz_k;
+extern volatile float target_yaw;
+extern volatile float yaw_gain;
 
 extern volatile float left_base_rpm;
 extern volatile float right_base_rpm;

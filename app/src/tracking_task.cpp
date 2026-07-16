@@ -19,38 +19,12 @@ static constexpr configSTACK_DEPTH_TYPE STACK = 512;
 static constexpr UBaseType_t PRIO = 3;
 static constexpr UBaseType_t QUEUE_LEN = 256;
 
-static QueueHandle_t track_queue = NULL;
-static uint8_t rx_byte;
+QueueHandle_t track_queue = NULL;
+uint8_t track_rx_byte;
 
 tracking track;
 volatile float pos = 0.0f;
 volatile float err = 0.0f;
-
-extern "C"
-{
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-    if (huart == &huart3)
-    {
-        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-        xQueueSendFromISR(track_queue, &rx_byte, &xHigherPriorityTaskWoken);
-        HAL_UART_Receive_IT(&huart3, &rx_byte, 1);
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-    }
-}
-
-void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
-{
-    if (huart == &huart3)
-    {
-        __HAL_UART_CLEAR_OREFLAG(huart);
-        __HAL_UART_CLEAR_FEFLAG(huart);
-        __HAL_UART_CLEAR_NEFLAG(huart);
-        __HAL_UART_CLEAR_PEFLAG(huart);
-        HAL_UART_Receive_IT(&huart3, &rx_byte, 1);
-    }
-}
-}
 
 // 解析出一帧后更新 pos/err/事件
 static void process_frame(void)
@@ -122,7 +96,7 @@ static void tracking_task(void *pv)
     (void)pv;
     TRACKING_DBG("tracking_task start\r\n");
 
-    HAL_UART_Receive_IT(&huart3, &rx_byte, 1);
+    HAL_UART_Receive_IT(&huart3, &track_rx_byte, 1);
 
     // 发送数字命令启动数据流
     HAL_UART_Transmit(&huart3, (const uint8_t *)digital_cmd.data(),

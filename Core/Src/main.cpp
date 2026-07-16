@@ -184,7 +184,7 @@ int main(void)
   key_task_create();
   oled_task_create();
   vector_pid_task_create();
-  // imu_task_create();
+  imu_task_create();
   tracking_task_create();
 
   vTaskStartScheduler();
