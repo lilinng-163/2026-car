@@ -54,8 +54,8 @@ static void imu_task(void *pv)
             float pitch_deg = a.pitch * 180.0f / 3.14159265f;
             float yaw_deg   = a.yaw   * 180.0f / 3.14159265f;
             IMU_DBG("gz=%d\r\n", (int)imu_gz);
-            // IMU_DBG("Roll: %.2f  Pitch: %.2f  Yaw: %.2f\r\n",
-            //         roll_deg, pitch_deg, yaw_deg);
+            IMU_DBG("Roll: %.2f  Pitch: %.2f  Yaw: %.2f\r\n",
+                    roll_deg, pitch_deg, yaw_deg);
         }
     }
 }

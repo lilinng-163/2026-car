@@ -95,7 +95,7 @@ static void adjust_yaw_gain(float dir)
     KEY_DBG("yaw_gain -> %d.%02d\r\n", (int)yaw_gain, (int)(yaw_gain * 100.0f) % 100);
 }
 
-// 页0：调 SP
+// 页0：调 SP / TARGET_LAPS
 static void adjust_sp(float dir)
 {
     if (tune_select == TUNE_SP_L)
@@ -103,10 +103,15 @@ static void adjust_sp(float dir)
         set_left_target_rpm(clampf(left_base_rpm + dir * SP_STEP, SP_MIN, SP_MAX));
         KEY_DBG("SP L -> %d\r\n", (int)left_base_rpm);
     }
-    else
+    else if (tune_select == TUNE_SP_R)
     {
         set_right_target_rpm(clampf(right_base_rpm + dir * SP_STEP, SP_MIN, SP_MAX));
         KEY_DBG("SP R -> %d\r\n", (int)right_base_rpm);
+    }
+    else
+    {
+        target_laps = clampf(target_laps + dir * 1.0f, 1.0f, 10.0f);
+        KEY_DBG("target_laps -> %d\r\n", (int)target_laps);
     }
 }
 

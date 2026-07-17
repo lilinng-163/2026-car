@@ -13,10 +13,9 @@ static constexpr const char *NAME  = "oled";
 static constexpr configSTACK_DEPTH_TYPE STACK = 1024;
 static constexpr UBaseType_t PRIO = 3;
 
-// 页0：SP 调参页（k1 选择 L/R，k0/k2 增减，'>' 为选中标记）
+// 页0：SP + LAP 调参页（k1 选择 L/R/LAP，k0/k2 增减，'>' 为选中标记）
 static void show_page0(oled096 &o, char *buf, size_t len)
 {
-    // Line 0: setpoint (SP)，选中项前带 '>'
     snprintf(buf, len, "SP%cL%-5d%cR%-5d",
              (tune_select == TUNE_SP_L) ? '>' : ' ',
              static_cast<int>(left_base_rpm),
@@ -24,20 +23,19 @@ static void show_page0(oled096 &o, char *buf, size_t len)
              static_cast<int>(right_base_rpm));
     o.show_string(buf, 0, 0);
 
-    // Line 1: actual (AC)
     snprintf(buf, len, "AC L%-5d R%-5d",
              static_cast<int>(left_actual_rpm),
              static_cast<int>(right_actual_rpm));
     o.show_string(buf, 0, 16);
 
-    // Line 2: output (OT)
     snprintf(buf, len, "OT L%-5d R%-5d",
              static_cast<int>(left_out_val),
              static_cast<int>(right_out_val));
     o.show_string(buf, 0, 32);
 
-    // Line 3: voltage + page
-    snprintf(buf, len, "V%d.%dV       P1",
+    snprintf(buf, len, "%cL%d/%d V%d.%dV P1",
+             (tune_select == TUNE_TARGET_LAP) ? '>' : ' ',
+             lap_count, static_cast<int>(target_laps),
              static_cast<int>(vin_actual),
              static_cast<int>(vin_actual * 10.0f) % 10);
     o.show_string(buf, 0, 48);

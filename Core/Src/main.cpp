@@ -167,7 +167,7 @@ int main(void)
       " \\____\\___/|_| |_| |_| .__/ \\___|\\__|_|\\__|_|\\___/|_| |_|\n"
       "                     |_|   \n"
       );
-  printf("author: lilinng\r\n");
+  printf("author: lilinng 巨媛媛 袁羽琪\r\n");
   printf("email: wangyixiang051129@163.com || yi9597402@gmail.com\r\n");
   printf("__cplusplus: %ld\r\n", static_cast<long>(__cplusplus));
   printf("GCC VERSION: %d.%d.%d\r\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);

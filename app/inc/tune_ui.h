@@ -5,10 +5,11 @@
 // OLED 调参 UI 共享状态 (key_task 写, oled_task 读)
 inline constexpr uint8_t TUNE_NUM_PAGES = 4;   // 总页数
 
-// 页0可调参数索引 (SP)
-inline constexpr uint8_t TUNE_SP_L = 0;
-inline constexpr uint8_t TUNE_SP_R = 1;
-inline constexpr uint8_t TUNE_P0_PARAMS = 2;
+// 页0可调参数索引 (SP_L / SP_R / TARGET_LAPS)
+inline constexpr uint8_t TUNE_SP_L       = 0;
+inline constexpr uint8_t TUNE_SP_R       = 1;
+inline constexpr uint8_t TUNE_TARGET_LAP = 2;
+inline constexpr uint8_t TUNE_P0_PARAMS  = 3;
 
 // 页1可调参数索引 (双电机 PID 增益)
 inline constexpr uint8_t TUNE_L_KP = 0;

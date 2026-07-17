@@ -3,12 +3,24 @@
 #include <cstdint>
 #include "pid.h"
 
+enum class running_event : uint8_t
+{
+    straight,
+    turning
+};
+
+extern volatile running_event r_e;
+extern volatile uint16_t lap_count;
+extern volatile uint8_t  corner_count;
+extern volatile float    target_laps;
+
 extern pid left_motor_pid;
 extern pid right_motor_pid;
 extern pid yaw_pid;
 extern volatile float steer_kp;
 extern volatile float steer_kd;
 extern volatile float gz_k;
+extern volatile float turn_k;
 extern volatile float target_yaw;
 extern volatile float yaw_gain;
 
