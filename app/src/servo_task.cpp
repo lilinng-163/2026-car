@@ -1,40 +1,42 @@
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "tim.h"
+#include "pid.h"
 #include "servo.h"
 #include "servo_task.h"
 
 static constexpr const char *NAME  = "servo";
-static constexpr configSTACK_DEPTH_TYPE STACK = 128;
+static constexpr configSTACK_DEPTH_TYPE STACK = 256;
 static constexpr UBaseType_t PRIO = 3;
+
+volatile float ball_pos       = 0.0f;
+volatile float ball_setpoint  = 0.0f;
+volatile float servo_angle    = 135.0f;
+
+static constexpr float TS = 0.01f;
+static constexpr float BASE_ANGLE = 135.0f;
+
+static pid ball_pid(0.8f, 0.0f, 0.15f, TS, -30.0f, 30.0f);
 
 static void servo_task(void *pv)
 {
     (void)pv;
 
-    // servo s(&htim2, TIM_CHANNEL_1);
+    servo s(&htim9, TIM_CHANNEL_1, 270.0f);
+    s.start();
+    s.set_angle(BASE_ANGLE);
 
-    float angle = 0.0f;
-    int8_t dir = 1;
+    TickType_t last_wake = xTaskGetTickCount();
 
     while (1)
     {
-        // s.set_angle(angle);
+        vTaskDelayUntil(&last_wake, pdMS_TO_TICKS(10));
 
-        // angle += dir * 2.0f;
-        // if (angle >= 180.0f)
-        // {
-        //     angle = 180.0f;
-        //     dir = -1;
-        // }
-        // else if (angle <= 0.0f)
-        // {
-        //     angle = 0.0f;
-        //     dir = 1;
-        // }
+        float err = ball_setpoint - ball_pos;
+        float out = ball_pid.calculate(0.0f, err);
 
-        // vTaskDelay(pdMS_TO_TICKS(20));
-        vTaskDelay(pdMS_TO_TICKS(100));
+        servo_angle = BASE_ANGLE + out;
+        s.set_angle(servo_angle);
     }
 }
 

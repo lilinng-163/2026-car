@@ -18,14 +18,8 @@
 /* USER CODE BEGIN Includes */
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
-#include "lcd.h"
-#include "lvgl.h"
-#include "lv_port_touch.h"
-#include "lvgl_task.h"
 #include "led_task.h"
-#include "mutex.h"
 #include "servo_task.h"
-#include "show_pv.h"
 #include "key_task.h"
 #include "oled_task.h"
 #include "vector_pid_task.h"
@@ -134,6 +128,7 @@ int main(void)
   MX_ADC1_Init();
   MX_USART3_UART_Init();
   MX_TIM4_Init();
+  MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   // 行缓冲: 每行凑齐后由 _write 一次性发出，配合 print_mutex 保证各任务整行原子输出
   static char stdout_buf[256];
@@ -167,20 +162,12 @@ int main(void)
       " \\____\\___/|_| |_| |_| .__/ \\___|\\__|_|\\__|_|\\___/|_| |_|\n"
       "                     |_|   \n"
       );
-  printf("author: lilinng 巨媛媛 袁羽琪\r\n");
+  printf("author: lilinng jyy yyq\r\n");
   printf("email: wangyixiang051129@163.com || yi9597402@gmail.com\r\n");
   printf("__cplusplus: %ld\r\n", static_cast<long>(__cplusplus));
   printf("GCC VERSION: %d.%d.%d\r\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
-  // lv_init();
-  // lcd_init();
-  // lv_port_touch_init();
-
-  // lvgl_mutex_init();
-
-  // lvgl_task_create();
-  // show_pv_create();
   led_task_create();
-  // servo_task_create();
+  servo_task_create();
   key_task_create();
   oled_task_create();
   vector_pid_task_create();
