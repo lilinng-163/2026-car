@@ -23,8 +23,10 @@
 #include "key_task.h"
 #include "oled_task.h"
 #include "vector_pid_task.h"
+#include "pid_task.h"
 #include "imu_task.h"
 #include "tracking_task.h"
+#include "uart_cmd_task.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -167,12 +169,14 @@ int main(void)
   printf("__cplusplus: %ld\r\n", static_cast<long>(__cplusplus));
   printf("GCC VERSION: %d.%d.%d\r\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
   led_task_create();
-  servo_task_create();
+  // servo is controlled by pid_task for the 25cm pipe/ball system.
   key_task_create();
   oled_task_create();
   vector_pid_task_create();
-  imu_task_create();
+  pid_task_create();
+  // UART2 is used by pid_task to receive vision frames.
   tracking_task_create();
+  uart_cmd_task_create();
 
   vTaskStartScheduler();
 

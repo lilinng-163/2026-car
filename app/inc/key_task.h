@@ -6,6 +6,7 @@ void key_task_create();
 enum class task_mode : uint8_t {
     idle = 0,
     line_patrol,
+    ques_2,
     mode_count
 };
 

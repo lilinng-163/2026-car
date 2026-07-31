@@ -29,47 +29,66 @@ volatile float err = 0.0f;
 // 解析出一帧后更新 pos/err/事件
 static void process_frame(void)
 {
-    // 模块极性: 白=1 黑=0，跟踪黑线 -> 用(1-v)算黑色重心
-    float sum = 0, weithted = 0;
-    for(int i = 0; i < 8; i++)
+    int black_idx[8];
+    int black_count = 0;
+    for (int i = 0; i < 8; i++)
+    {
+        if (track.digital_values[i] == 0)   // 黑=0
+            black_idx[black_count++] = i;
+    }
+
+    if (black_count == 0)
+    {
+        track.e = tracking::tracking_event::LOST;
+        return;
+    }
+
+    // 黑灯必须连续，排除路面不平导致的散点噪声
+    bool contiguous = true;
+    for (int i = 1; i < black_count; i++)
+    {
+        if (black_idx[i] - black_idx[i - 1] > 1)
+        {
+            contiguous = false;
+            break;
+        }
+    }
+    if (!contiguous)
+        return;
+
+    // 异常大片 (起跑线最多4~5个)
+    if (black_count > 5)
+        return;
+
+    // 正常: 计算黑色重心
+    float sum = 0, weighted = 0;
+    for (int i = 0; i < 8; i++)
     {
         float v = 1.0f - track.digital_values[i];
         sum += v;
-        weithted += v * i;
+        weighted += v * i;
     }
-    if(sum < 0.01f)
-    {
-        // 全白: 没有线
-        track.e = tracking::tracking_event::LOST;
-    }
-    else if(sum > 7.5f)
-    {
-        // 全黑: 十字/终点/抱起，无方向信息，保持上次 pos
-        track.e = tracking::tracking_event::LOST;
-    }
-    else
-    {
-        pos = weithted / sum;
-        err = pos - middle;
 
-        if(err > 0.5f)
-        {
-            track.e = tracking::tracking_event::RIGHT;
-        }
-        else if(err < -0.5f)
-        {
-            track.e = tracking::tracking_event::LEFT;
-        }
-        else
-        {
-            track.e = tracking::tracking_event::MIDDLE;
-        }
-    }
+    pos = weighted / sum;
+    err = pos - middle;
+
+    // 限制单帧跳变，防止噪声拉偏
+    static float last_err = 0;
+    static bool  first = true;
+    if (first) { last_err = err; first = false; }
+    float delta = err - last_err;
+    if (delta >  1.0f) err = last_err + 1.0f;
+    if (delta < -1.0f) err = last_err - 1.0f;
+    last_err = err;
+
+    if (err > 0.5f)       track.e = tracking::tracking_event::RIGHT;
+    else if (err < -0.5f) track.e = tracking::tracking_event::LEFT;
+    else                  track.e = tracking::tracking_event::MIDDLE;
 
     // 20 cnt打印一次
     static uint32_t cnt = 0;
     cnt++;
-    if(cnt >= 20)
+    if (cnt >= 20)
     {
         cnt = 0;
         if (track.digital)

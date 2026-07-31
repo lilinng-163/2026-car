@@ -2,5 +2,7 @@
 
 void imu_task_create(void);
 
-extern volatile float imu_yaw;     // IMU 欧拉角 yaw (rad)
-extern volatile float imu_gz;      // IMU 陀螺仪 Z 轴角速度 (raw)
+extern volatile float imu_roll;
+extern volatile float imu_pitch;
+extern volatile float imu_yaw;
+extern volatile float imu_gz;

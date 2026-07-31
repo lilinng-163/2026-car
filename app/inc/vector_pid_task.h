@@ -33,6 +33,8 @@ extern volatile float right_setpoint_rpm;
 extern volatile float left_out_val;
 extern volatile float right_out_val;
 extern volatile float vin_actual;
+extern volatile int32_t left_enc_total;
+extern volatile int32_t right_enc_total;
 
 void vector_pid_task_create(void);
 

@@ -28,15 +28,29 @@ static void servo_task(void *pv)
 
     TickType_t last_wake = xTaskGetTickCount();
 
+    float test_angle = 0.0f;
+    float step = 1.0f;
+
     while (1)
     {
         vTaskDelayUntil(&last_wake, pdMS_TO_TICKS(10));
 
-        float err = ball_setpoint - ball_pos;
-        float out = ball_pid.calculate(0.0f, err);
+        test_angle += step;
+        if (test_angle >= 270.0f) {
+            test_angle = 270.0f;
+            step = -1.0f;
+        } else if (test_angle <= 0.0f) {
+            test_angle = 0.0f;
+            step = 1.0f;
+        }
 
-        servo_angle = BASE_ANGLE + out;
+        servo_angle = test_angle;
         s.set_angle(servo_angle);
+
+        //float err = ball_setpoint - ball_pos;
+        //float out = ball_pid.calculate(0.0f, err);
+        //servo_angle = BASE_ANGLE + out;
+        //s.set_angle(servo_angle);
     }
 }
 

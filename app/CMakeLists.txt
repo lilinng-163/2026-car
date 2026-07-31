@@ -2,11 +2,13 @@ add_library(app OBJECT
     src/led_task.cpp
     src/servo_task.cpp
     src/vector_pid_task.cpp
+    src/pid_task.cpp
     src/key_task.cpp
     src/oled_task.cpp
     src/imu_task.cpp
     src/tracking_task.cpp
     src/uart_isr.cpp
+    src/uart_cmd_task.cpp
 )
 
 target_include_directories(app PUBLIC

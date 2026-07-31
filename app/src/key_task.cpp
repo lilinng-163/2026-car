@@ -21,6 +21,7 @@ static uint32_t stopwatch_start_tick = 0;
     switch (m) {
         case task_mode::idle:        return "IDLE";
         case task_mode::line_patrol: return "PATROL";
+        case task_mode::ques_2:      return "QUES2";
         default: return "?";
     }
 }
