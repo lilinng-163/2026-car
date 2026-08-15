@@ -1,3 +1,8 @@
+/**
+ * @file    beep.cpp
+ * @brief   蜂鸣器驱动(单例, PG7, 高电平有效)
+ */
+
 #include "beep.h"
 #include "main.h"
 #include "gpio.h"

@@ -1,3 +1,13 @@
+/**
+ * @file    imu.cpp
+ * @brief   IMU(10轴串口姿态传感器)协议驱动实现
+ *
+ *          帧格式: 0x7E 0x23 [长度] [功能字] [数据...] [校验和]
+ *          校验和 = 帧头起至校验位前所有字节累加取最低字节。
+ *          支持功能字: 0x04 原始三轴数据 / 0x16 四元数 / 0x26 欧拉角。
+ *          小端字节序，详见 README.md "IMU" 一节。
+ */
+
 #include <cstring>
 #include "stm32f4xx_hal.h"
 #include "imu.h"
@@ -7,6 +17,8 @@ imu_9::imu_9(UART_HandleTypeDef *_huart)
 {
 }
 
+// 逐字节喂入组帧; 返回 0=解析出一帧, -1=数据不足/校验失败/需同步
+// 内部流程: 满则清 -> 追加 -> 校验头/长度 -> 凑齐整帧 -> 校验和 -> parse_frame
 int imu_9::feed_byte(uint8_t byte)
 {
     if (rx_buf.full())
@@ -49,6 +61,7 @@ int imu_9::feed_byte(uint8_t byte)
     return ret;
 }
 
+// 丢失同步时把缓冲滑动到下一个 0x7E 包头位置
 void imu_9::sync_to_header(void)
 {
     for (size_t i = 0; i < rx_buf.size(); i++)
@@ -68,11 +81,13 @@ void imu_9::sync_to_header(void)
     rx_buf.clear();
 }
 
+// 小端 16 位有符号整型
 static int16_t le16(const uint8_t *p)
 {
     return static_cast<int16_t>(p[0] | (p[1] << 8));
 }
 
+// 小端 32 位 IEEE754 浮点
 static float le32f(const uint8_t *p)
 {
     int32_t bits = static_cast<int32_t>(
@@ -82,6 +97,7 @@ static float le32f(const uint8_t *p)
     return f;
 }
 
+// 按功能字分发解析，写入对应成员(raw_data / q_data / angles)
 int imu_9::parse_frame(etl::span<uint8_t> frame)
 {
     uint8_t func = frame[3];

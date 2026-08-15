@@ -2,6 +2,9 @@
 
 #include "arm_math.h"
 
+// 增量式 PID(条件积分抗饱和)，实现见 pid.cpp
+// 构造/设置增益传入的是当前采样周期 Ts 下的离散值:
+//   Ki = Kp'/Ti * Ts,  Kd = Kp'*Td / Ts
 class pid
 {
 public:
@@ -9,11 +12,11 @@ public:
         float32_t _ts,
         float32_t _out_min = 0.0f, float32_t _out_max = 1.0f);
 
-    void reset(void);
-    void set_gains(float32_t _kp, float32_t _ki, float32_t _kd);
-    void set_ts(float32_t _ts);
-    void set_limits(float32_t _min, float32_t _max);
-    float32_t calculate(float32_t setpoint, float32_t measurement);
+    void reset(void);                             // 清零误差历史与输出
+    void set_gains(float32_t _kp, float32_t _ki, float32_t _kd);  // 设定离散增益
+    void set_ts(float32_t _ts);                   // 更改采样周期(自动换算离散系数)
+    void set_limits(float32_t _min, float32_t _max);             // 输出限幅
+    float32_t calculate(float32_t setpoint, float32_t measurement); // 步进一次并返回输出
     // 返回内部 CMSIS-DSP 实例副本，供 UI 只读显示 Kp/Ki/Kd
     arm_pid_instance_f32 get_instance(void);
 private:

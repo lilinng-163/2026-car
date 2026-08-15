@@ -1,5 +1,16 @@
+/**
+ * @file    tracking.cpp
+ * @brief   亚博 8 路循迹(YB-MUX04)串口协议解析实现
+ *
+ *          数字帧: $D,x1:1,x2:1,...,x8:0#
+ *          模拟帧: $A,x1:3794,x2:4025,...,x8:3845#
+ *          feed_byte 以 '#' 为帧尾触发解析，非法时滑动到 '$' 重新同步。
+ */
+
 #include "tracking.h"
 
+// 逐字节喂入; 遇到帧尾 '#' 时解析一帧并清缓冲
+// 返回 0=正常(或组帧中), -1=帧头非法已清缓冲
 int tracking::feed_byte(uint8_t byte)
 {
     if (rx_buf.full())
@@ -25,6 +36,7 @@ int tracking::feed_byte(uint8_t byte)
     return 0;
 }
 
+// 滑动缓冲到下一个 '$' 帧头位置
 void tracking::sync_to_header(void)
 {
     for (size_t i = 0; i < rx_buf.size(); i++)
@@ -44,6 +56,7 @@ void tracking::sync_to_header(void)
     rx_buf.clear();
 }
 
+// 解析整帧: 逐通道提取 "chN:" 后的值(数字=0/1, 模拟=十进制数)存入对应数组
 void tracking::parse_frame(void)
 {
     if (rx_buf.size() < 4)

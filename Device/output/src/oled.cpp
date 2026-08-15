@@ -34,6 +34,7 @@ int oled096::write_data(unsigned char data)
     return i2c.send_data(0x78, 0x40, &data, 1);
 }
 
+// 设置光标(页号 y=0~7, 列 x=0~127)
 int oled096::setcursor(unsigned char x, unsigned char y)
 {
     write_cmd(0xB0 | y);

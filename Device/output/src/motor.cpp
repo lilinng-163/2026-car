@@ -1,3 +1,12 @@
+/**
+ * @file    motor.cpp
+ * @brief   直流电机 PWM + H 桥方向控制驱动实现
+ *
+ *          direction: 两路 GPIO 控制 H 桥 IN1/IN2 方向
+ *          motor:     定时器 PWM 输出控制占空比，另提供频率/周期查询
+ *                     (周期 period 用于换算 PID 输出到占空比的满量程)。
+ */
+
 #include <cstdio>
 #include <cstdint>
 #include "stm32f407xx.h"
@@ -11,6 +20,7 @@ direction::direction(GPIO_TypeDef *_gpiox, uint16_t _pin1, uint16_t _pin2)
 
 }
 
+// 设置 H 桥方向: forward=IN1高IN2低, reversal=IN1低IN2高
 int direction::set_dir(direction::MOTOR_DIRECTION dir)
 {
     if(dir == MOTOR_DIRECTION::forward)
@@ -47,6 +57,7 @@ void motor::set_duty(uint32_t _duty)
     __HAL_TIM_SET_COMPARE(htim, channel, _duty);
 }
 
+// 查询 PWM 实际频率(Hz): 由定时器时钟、预分频、周期反推
 uint32_t motor::get_freq(void)
 {
     uint32_t tim_clk = 0;
@@ -69,6 +80,7 @@ uint32_t motor::get_freq(void)
     return tim_clk / (htim->Init.Prescaler + 1) / (htim->Init.Period + 1);
 }
 
+// 当前定时器自动重载值(period)，作为 PWM 占空比满量程(100%)
 uint32_t motor::get_period(void)
 {
     return htim->Init.Period;

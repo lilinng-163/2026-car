@@ -5,6 +5,7 @@
 #include "etl/vector.h"
 #include "etl/span.h"
 
+// 原始三轴数据 (0x04): accel/gyro/mag, 各 int16 小端
 typedef struct
 {
     int16_t ax;
@@ -18,6 +19,7 @@ typedef struct
     int16_t mz;
 } a_g_m;
 
+// 四元数 (0x16)
 typedef struct
 {
     float q0;
@@ -26,6 +28,7 @@ typedef struct
     float q3;
 } quaternion;
 
+// 欧拉角 (0x26), 单位弧度
 typedef struct
 {
     float roll;
@@ -33,12 +36,13 @@ typedef struct
     float yaw;
 } posture_angles;
 
+// IMU 串口协议解析器: feed_byte 逐字节喂入，帧对齐/校验/解析全在此类完成
 class imu_9
 {
 public:
     imu_9(UART_HandleTypeDef *_huart);
 
-    int feed_byte(uint8_t byte);
+    int feed_byte(uint8_t byte);   // 0=解析成功一帧, -1=未完成/失败
 
     const a_g_m &get_raw(void) { return raw_data; }
     const quaternion &get_quat(void) { return q_data; }

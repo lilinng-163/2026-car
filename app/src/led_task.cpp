@@ -1,3 +1,10 @@
+/**
+ * @file    led_task.cpp
+ * @brief   LED 指示任务 (led)
+ *
+ *          周期 500ms 翻转 LED0(PE3, 低电平点亮)作为系统运行指示灯。
+ */
+
 #include <cstdio>
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"

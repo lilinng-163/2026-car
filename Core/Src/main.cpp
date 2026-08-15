@@ -64,6 +64,7 @@ void SystemClock_Config(void);
 #ifdef __cplusplus
 extern "C" {
 #endif
+// printf 底层字节输出重定向到 USART1 (PA9/PA10)
 int __io_putchar(int ch) {
     HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, HAL_MAX_DELAY);
     return ch;
@@ -72,6 +73,7 @@ int __io_putchar(int ch) {
 /* 多任务 printf 互斥：防止并发调 HAL_UART_Transmit 时返回 BUSY 丢字符 */
 static SemaphoreHandle_t print_mutex = NULL;
 
+// _write: newlib 标准输出最终汇聚点；调度器启动后加互斥，保证整行原子输出
 int _write(int file, char *ptr, int len) {
     (void)file;
     bool lock = (print_mutex != NULL) &&
@@ -137,13 +139,14 @@ int main(void)
   setvbuf(stdout, stdout_buf, _IOLBF, sizeof(stdout_buf));
   print_mutex = xSemaphoreCreateMutex();
 
-    printf(
+  // ---- 启动横幅 ----
+  printf(
       " __        __   _  ____  \n"
       " \\ \\      / /__| |/ ___|___  _ __ ___   ___\n"
       "  \\ \\ /\\ / / _ \\ | |   / _ \\| '_ ` _ \\ / _ \\\n"
       "   \\ V  V /  __/ | |__| (_) | | | | | |  __/\n"
       "    \\_/\\_/ \\___|_|\\____\\___/|_| |_| |_|\\___|\n");
-    printf(
+  printf(
       "____   ___ ____   __   \n"
       "|___ \\ / _ \\___ \\ / /_  \n"
       "  __) | | | |__) | '_ \\ \n"
@@ -168,6 +171,8 @@ int main(void)
   printf("email: wangyixiang051129@163.com || yi9597402@gmail.com\r\n");
   printf("__cplusplus: %ld\r\n", static_cast<long>(__cplusplus));
   printf("GCC VERSION: %d.%d.%d\r\n", __GNUC__, __GNUC_MINOR__, __GNUC_PATCHLEVEL__);
+
+  // ---- 创建各 RTOS 任务 ----
   led_task_create();
   // servo is controlled by pid_task for the 25cm pipe/ball system.
   key_task_create();

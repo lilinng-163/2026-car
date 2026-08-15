@@ -1,3 +1,13 @@
+/**
+ * @file    encoder.cpp
+ * @brief   编码器驱动实现
+ *
+ *          motor_encoder : 电机编码器, 利用定时器编码器模式(TI12)硬件 4 倍频计数,
+ *                          无 CPU 开销; get_count() 返回带符号累计值(注意 16 位
+ *                          计数器回绕处理), get_rpm()/get_cm_s() 换算转速。
+ *          rotary_encoder: GPIO 中断旋转编码器, 由外部 EXTI 回调调用 on_interrupt()。
+ */
+
 #include "encoder.h"
 
 motor_encoder::motor_encoder(TIM_HandleTypeDef *_htim, int32_t _lines, bool _invert)
@@ -15,6 +25,9 @@ void motor_encoder::stop(void)
     HAL_TIM_Encoder_Stop(htim, TIM_CHANNEL_ALL);
 }
 
+// 读取编码器累计计数:
+// 16 位计数器按符号扩展求增量(m_invert 可反相)，累加到 32 位 m_total_count，
+// 从而避免计数上限限制并正确处理回绕。
 int32_t motor_encoder::get_count(void)
 {
     uint16_t raw = static_cast<uint16_t>(__HAL_TIM_GET_COUNTER(htim));
@@ -33,6 +46,7 @@ void motor_encoder::reset(void)
     m_last_tick = HAL_GetTick();
 }
 
+// 增量测速: 两次调用间计数差 / 时间差(计数/ms)
 float motor_encoder::get_speed(void)
 {
     uint32_t now = HAL_GetTick();
@@ -49,6 +63,7 @@ float motor_encoder::get_speed(void)
 float motor_encoder::get_rpm(void)  // 转/分
 {
     if (enc_lines == 0) return 0.0f;
+    // 1 转 = 线数×4(倍频) 个计数; get_speed() 单位计数/ms -> rpm
     return get_speed() * 60000.0f / static_cast<float>(enc_lines * 4);
 }
 
@@ -57,6 +72,7 @@ void motor_encoder::set_wheel_circumference_mm(float _circumference_mm)
     m_circumference_mm = _circumference_mm;
 }
 
+// 线速度(cm/s): 计数/ms * 25(减速比?) * 轮周长 / 线数 —— 需配合轮周长设置使用
 float motor_encoder::get_cm_s(void)
 {
     if (enc_lines == 0 || m_circumference_mm == 0.0f)
@@ -97,6 +113,7 @@ void rotary_encoder::reset(void)
     m_count = 0;
 }
 
+// A 相跳变沿触发: A 与 B 电平相同为正向(+1)，相反为反向(-1)
 void rotary_encoder::on_interrupt(void)
 {
     if (!m_enabled)

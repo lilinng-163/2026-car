@@ -3,6 +3,7 @@
 #include <cstdint>
 
 // OLED 调参 UI 共享状态 (key_task 写, oled_task 读)
+// 共 4 页，每页若干可调参数; 页号 tune_page / 页内索引 tune_select 由按键切换。
 inline constexpr uint8_t TUNE_NUM_PAGES = 4;   // 总页数
 
 // 页0可调参数索引 (SP_L / SP_R / TARGET_LAPS)

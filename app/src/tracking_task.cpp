@@ -1,3 +1,14 @@
+/**
+ * @file    tracking_task.cpp
+ * @brief   8 路循迹传感器任务 (tracking)
+ *
+ *          亚博 8 路循迹(YB-MUX04)经 UART3 上报数字/模拟数据，
+ *          本任务每 10ms 批量取一次串口队列并喂给 tracking::feed_byte 组帧，
+ *          解析出黑色线重心 pos 与偏差 err，供速度环外环(向量PID)使用。
+ *
+ *          数据流: UART3 中断 -> track_queue -> tracking::feed_byte -> process_frame -> pos/err
+ */
+
 #include <cstdio>
 #include <string_view>
 #include "FreeRTOS/FreeRTOS.h"
@@ -9,10 +20,11 @@
 #include "tracking_task.h"
 #include "debug_print.h"
 
-static constexpr std::string_view calibration = "$1,0,0#";
-static constexpr std::string_view digital_cmd = "$0,0,1#";
-static constexpr std::string_view analog_cmd = "$0,1,0#";
-static constexpr std::string_view both_cmd = "$0,1,1#";
+// 与上位机(循迹板)的交互命令帧
+static constexpr std::string_view calibration = "$1,0,0#";  // 校准
+static constexpr std::string_view digital_cmd = "$0,0,1#";  // 只上报数字量
+static constexpr std::string_view analog_cmd = "$0,1,0#";   // 只上报模拟量
+static constexpr std::string_view both_cmd = "$0,1,1#";     // 数字+模拟同时上报
 
 static constexpr const char *NAME  = "tracking";
 static constexpr configSTACK_DEPTH_TYPE STACK = 512;
@@ -27,6 +39,7 @@ volatile float pos = 0.0f;
 volatile float err = 0.0f;
 
 // 解析出一帧后更新 pos/err/事件
+// 步骤: 统计黑灯(0)下标 -> 排除不连续/大片异常 -> 计算黑色重心 pos -> 限幅单帧跳变 -> 判定左/中/右
 static void process_frame(void)
 {
     int black_idx[8];
@@ -115,7 +128,7 @@ static void tracking_task(void *pv)
     (void)pv;
     TRACKING_DBG("tracking_task start\r\n");
 
-    HAL_UART_Receive_IT(&huart3, &track_rx_byte, 1);
+    HAL_UART_Receive_IT(&huart3, &track_rx_byte, 1);   // 启动 UART3 中断接收循迹数据
 
     // 发送数字命令启动数据流
     HAL_UART_Transmit(&huart3, (const uint8_t *)digital_cmd.data(),

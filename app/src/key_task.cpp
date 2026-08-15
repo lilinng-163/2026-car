@@ -1,3 +1,14 @@
+/**
+ * @file    key_task.cpp
+ * @brief   按键控制任务 (key)
+ *
+ *          轮询三颗按键(去抖 FSM 见 key::key_tick)：
+ *            K0 切换运行模式 (idle / line_patrol / ques_2)
+ *            K1 启动当前模式(并清零圈数与秒表)
+ *            K2 停止当前模式
+ *          运行期间维护全局秒表 stopwatch_elapsed_ms。
+ */
+
 #include <cstdio>
 #include <cstdint>
 #include "FreeRTOS/FreeRTOS.h"
@@ -29,9 +40,9 @@ static uint32_t stopwatch_start_tick = 0;
 static void key_task(void *pv)
 {
     (void)pv;
-    key k0(GPIOF, GPIO_PIN_9);
-    key k1(GPIOF, GPIO_PIN_8);
-    key k2(GPIOF, GPIO_PIN_7);
+    key k0(GPIOF, GPIO_PIN_9);   // K0: 模式切换
+    key k1(GPIOF, GPIO_PIN_8);   // K1: 启动
+    key k2(GPIOF, GPIO_PIN_7);   // K2: 停止
     KEY_DBG("key_task start\r\n");
 
     while (1)

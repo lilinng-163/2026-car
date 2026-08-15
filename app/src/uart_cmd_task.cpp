@@ -1,3 +1,15 @@
+/**
+ * @file    uart_cmd_task.cpp
+ * @brief   串口调试命令任务 (uart_cmd)
+ *
+ *          通过 USART1 接收调试命令行，回车后按前缀匹配执行在线调参，
+ *          支持左/右/双电机目标转速、双电机 PID 增益、巡线 PD、
+ *          陀螺仪阻尼、弯道减速比例、yaw 相关增益、目标圈数等。
+ *
+ *          命令格式: "key:value" 回车结束，例如 "both_sp:3500"
+ *          命令表见 cmds[]。
+ */
+
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -18,11 +30,13 @@ static constexpr size_t LINE_BUFSIZ = 64;
 QueueHandle_t uart1_queue = NULL;
 uint8_t uart1_rx_byte;
 
+// 命令表项: 前缀 key + 对应 setter(参数为 key 后面的剩余字符串)
 struct cmd_entry {
     const char *key;
     void (*setter)(const char *val);
 };
 
+// 解析浮点参数
 static float parse_float(const char *s)
 {
     return strtof(s, NULL);
@@ -155,6 +169,13 @@ static void cmd_t_laps(const char *val)
     //printf("[cmd] t_laps = %.2f\r\n", (double)target_laps);
 }
 
+// ---- 调试命令表 ----
+// 双电机相关:  left_sp / right_sp / both_sp         目标转速(RPM)
+// 内环PID:     l_kp/l_ki/l_kd  r_kp/r_ki/r_kd        左/右电机 PID 增益
+// 巡线外环:    steer_kp/steer_kd/gz_k                巡线PD + 陀螺仪阻尼
+// 弯道减速:    turn_k                                (0~1, 1=不减速)
+// yaw 保持:    y_kp/y_ki/y_kd/y_gain                 yaw PID 增益与总增益
+// 圈数:        t_laps                                目标圈数
 static const cmd_entry cmds[] = {
     {"left_sp:",  cmd_left_sp},
     {"right_sp:", cmd_right_sp},
@@ -176,6 +197,7 @@ static const cmd_entry cmds[] = {
     {"t_laps:",   cmd_t_laps},
 };
 
+// 按前缀匹配执行第一条命中的命令；找不到则静默忽略
 static void process_command(const char *line)
 {
     for (const auto &c : cmds)
@@ -193,6 +215,7 @@ static void uart_cmd_task(void *arg)
 {
     (void)arg;
 
+    // 延时启动，等待 printf 系统就绪(避免与启动横幅打印竞争串口)
     vTaskDelay(pdMS_TO_TICKS(500));
 
     HAL_StatusTypeDef rc = HAL_UART_Receive_IT(&huart1, &uart1_rx_byte, 1);

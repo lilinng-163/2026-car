@@ -1,3 +1,16 @@
+/**
+ * @file    vector_pid_task.cpp
+ * @brief   巡线双电机速度环任务 (vecpid)
+ *
+ *          每 10ms 一个控制周期:
+ *            编码器测速 -> 巡线外环(转向修正, 含 PD + 陀螺仪阻尼 + yaw 保持)
+ *            -> 速度内环 PID -> PWM 输出
+ *          另外负责: 起步助推、圈数/转角统计、ques2 停车检测、电池电压前馈。
+ *
+ * @note    左/右电机、编码器、方向控制引脚见本文件下方对象实例化处，
+ *          修改引脚时请同时确认 main.h 与 CubeMX 的引脚配置一致。
+ */
+
 #include <cmath>
 #include <cstdio>
 #include "FreeRTOS/FreeRTOS.h"
@@ -45,6 +58,7 @@ static constexpr float V_NOMINAL  = 12.0f;   // PID 整定时的标称电压
 volatile float  vin_actual = 0.0f;    // 实测输入电压(供 UI/调试)
 
 // 由 ADC 原始值还原真实输入电压(V)
+// 分压采样: PA4 -> (10K+1K)/1K 分压 -> ADC1_IN4, DMA 循环搬运到 adc_raw
 static float read_vin(void)
 {
     return static_cast<float>(adc_raw) / ADC_FULL * ADC_VREF * DIV_RATIO;
@@ -75,7 +89,10 @@ pid yaw_pid(0.68f, 0.0f, 0.0f, TS, -1.0f, 1.0f);
 volatile float target_yaw = 0.0f;
 volatile float yaw_gain   = 0.0f;    // yaw 先关，巡线+gz 稳了再加
 
+// ===== 电机输出辅助函数 =====
+
 // 把 PID 输出施加到电机：符号决定方向，绝对值作占空比
+// 注意: out 范围由 set_limits 限定在 [-period, +period]，占空比以 period 为满量程
 static void motor_apply_output(motor &mot, float out)
 {
     if (out >= 0.0f)
@@ -90,6 +107,7 @@ static void motor_apply_output(motor &mot, float out)
     }
 }
 
+// 紧急/停车刹车：两路 H 桥同接高电平（IN1=IN2=SET 短路制动），同时 PWM 置 0
 static void motor_brake(void)
 {
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_SET);
@@ -102,6 +120,7 @@ static void motor_brake(void)
 
 static uint8_t ques2_pattern[8];
 
+// 启动时刻状态初始化: 记录运行标志、设置起步助推剩余次数、快照起跑线传感器图案
 static void init_on_start(bool &was_running, int &kick_remain, bool &ques2_armed)
 {
     was_running = true;
@@ -112,6 +131,7 @@ static void init_on_start(bool &was_running, int &kick_remain, bool &ques2_armed
     right_motor.dir.set_dir(direction::MOTOR_DIRECTION::forward);
 }
 
+// 停止时: 复位运行标志，PWM 置 0，清零测速缓存
 static void reset_on_stop(bool &was_running)
 {
     was_running = false;
@@ -121,6 +141,11 @@ static void reset_on_stop(bool &was_running)
     right_actual_rpm = 0;
 }
 
+// ques2 任务专用停车检测：
+//   同时满足以下任一条件即认为完成一圈并停车:
+//     by_enc  = 左/右编码器累计计数值达到设定阈值(±窗口)
+//     by_gz   = 转过 >=4 个转角 && 陀螺仪 Z 轴角速度近乎静止(车速已停下)
+//   前提: 传感器图案与起跑线快照至少 6/8 路一致
 static bool ques2_check(int32_t l_cnt, int32_t r_cnt, bool &armed)
 {
     static constexpr int32_t ARM_TH   = 500;
@@ -154,6 +179,8 @@ static bool ques2_check(int32_t l_cnt, int32_t r_cnt, bool &armed)
     return false;
 }
 
+// 圈数统计: 对陀螺仪 Z 轴角速度积分得到累计偏航角，
+// 每累计 ~0.85*2π 判定为一圈并回绕(防止溢出漂移)，同时更新转角计数(每 90° 一个)
 static void update_lap(float &lap_yaw_acc)
 {
     static constexpr float GZ_SENS = 16.4f;
@@ -174,6 +201,8 @@ static void update_lap(float &lap_yaw_acc)
 
 // ===== 速度环主任务 =====
 // 每10ms: 测速 -> 巡线外环(转向修正) -> 速度内环PID -> PWM输出
+// 控制链路: eff_base(基础速度×弯道减速) ± track_fix(巡线PD+陀螺仪阻尼+yaw保持)
+//           -> 左/右设定转速 -> 速度内环PID(×电压前馈) -> 电机 PWM
 static void vector_pid_task_entry(void *pv)
 {
     (void)pv;

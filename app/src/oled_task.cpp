@@ -1,3 +1,11 @@
+/**
+ * @file    oled_task.cpp
+ * @brief   OLED 显示任务 (oled)
+ *
+ *          每 200ms 刷新一次 0.96 寸 OLED(软件 I2C)：
+ *          显示当前模式、运行秒表(分:秒.厘秒)、ques2 模式下显示编码器累计值。
+ */
+
 #include <cstdio>
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
@@ -15,7 +23,7 @@ static constexpr UBaseType_t PRIO = 3;
 static void oled_task(void *pv) {
     (void)pv;
     OLED_DBG("oled start\r\n");
-    static oled096 o(GPIOB, GPIO_PIN_3, GPIO_PIN_4);
+    static oled096 o(GPIOB, GPIO_PIN_3, GPIO_PIN_4);   // OLED SCL=PB3 SDA=PB4(软件I2C)
 
     char buf[32];
     while (1) {
@@ -23,6 +31,7 @@ static void oled_task(void *pv) {
 
         o.clear();
 
+        // 秒表拆分为 分:秒.厘秒
         uint32_t ms = stopwatch_elapsed_ms;
         uint32_t seconds = ms / 1000;
         uint32_t minutes = seconds / 60;

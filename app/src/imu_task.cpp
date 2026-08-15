@@ -1,3 +1,14 @@
+/**
+ * @file    imu_task.cpp
+ * @brief   IMU(10轴串口姿态传感器)任务 (imu)
+ *
+ *          每 10ms 取一次串口队列喂给 imu_9::feed_byte 组帧解析，
+ *          并把欧拉角/角速度发布到全局 volatile 变量供其他任务读取
+ *          (巡线外环的陀螺仪阻尼、yaw 保持、圈数统计都用到这里的数据)。
+ *
+ *          注: 本任务当前仍使用 UART2 硬件，实际接收路由以 uart_isr.cpp 为准。
+ */
+
 #include <cstdio>
 #include <cmath>
 #include "FreeRTOS/FreeRTOS.h"
@@ -26,7 +37,7 @@ static void imu_task(void *pv)
 {
     (void)pv;
     IMU_DBG("imu_task start\r\n");
-    
+
     imu_9 imu(&huart2);
     HAL_UART_Receive_IT(&huart2, &imu_rx_byte, 1);
 
@@ -36,12 +47,14 @@ static void imu_task(void *pv)
     {
         vTaskDelay(pdMS_TO_TICKS(10));
 
+        // 取尽队列字节并逐字节组帧
         uint8_t byte;
         while (xQueueReceive(imu_queue, &byte, 0) == pdTRUE)
         {
             imu.feed_byte(byte);
         }
 
+        // 发布欧拉角(rad)与陀螺仪 Z 轴角速度到全局
         const auto &a = imu.get_angles();
         imu_yaw = a.yaw;
         imu_gz  = static_cast<float>(imu.get_raw().gz);

@@ -1,3 +1,11 @@
+/**
+ * @file    servo_task.cpp
+ * @brief   舵机测试任务 (servo)
+ *
+ *          周期 10ms 驱动舵机在 0~270° 范围内往复摆动(整周期约 5.4s)，
+ *          用于舵机通路测试。球平衡的实际控制由 pid_task 接管(见 main.cpp)。
+ */
+
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "tim.h"

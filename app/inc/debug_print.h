@@ -3,6 +3,8 @@
 #include <cstdio>
 
 // ── 各任务调试打印总开关：1 开启 / 0 关闭 ──
+// 每个宏对应一个任务的 TRACKING_DBG/VECPID_DBG/... 调试打印；
+// 置 1 后该任务调试打印经 printf(USART1) 输出，否则编译为空语句。
 #define DEBUG_IMU_TASK      0
 #define DEBUG_KEY_TASK      0
 #define DEBUG_LED_TASK      0

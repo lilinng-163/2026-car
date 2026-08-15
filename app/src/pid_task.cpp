@@ -1,3 +1,15 @@
+/**
+ * @file    pid_task.cpp
+ * @brief   管道(25cm)滚球平衡任务 (ballpid)
+ *
+ *          上位机视觉通过 UART2 每帧上报球位置/速度/加速度与偏差，
+ *          本任务将横向像素误差经两级 PID 映射到舵机倾角，配合 IMU 俯仰角
+ *          做阻尼闭环，使钢球稳定在管道中心。
+ *
+ *          控制链: errx(像素误差) --pos_pid--> 目标管道倾角(°) --pitch_pid--> 舵机修正角
+ *          UART2 帧格式见 parse_vision_line()。
+ */
+
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
@@ -32,6 +44,7 @@ volatile float ball_target_pitch = 0.0f;
 volatile float ball_servo_angle = SERVO_CENTER_DEG;
 volatile float ball_pid_output = 0.0f;
 
+// 十六进制字符 -> 数值(0~15)，非法字符返回 -1
 static int hex_value(char c)
 {
     if (c >= '0' && c <= '9')
@@ -43,6 +56,8 @@ static int hex_value(char c)
     return -1;
 }
 
+// 在 payload 中查找 "key:" 前缀并解析紧随其后的十进制整数到 out
+// 例如 "errx:123" -> key="errx:" -> out=123；未找到或格式非法返回 false
 static bool parse_i32_field(const char *payload, const char *key, int32_t &out)
 {
     const char *p = std::strstr(payload, key);
@@ -59,6 +74,10 @@ static bool parse_i32_field(const char *payload, const char *key, int32_t &out)
     return true;
 }
 
+// 解析一行视觉数据(以 '\n' 结尾，'\r' 已去除)。
+// 帧格式: "cx:<n>;cy:<n>;errx:<n>;erry:<n>;vx:<n>;vy:<n>;ax:<n>;ay:<n>;<XOR校验和2位hex>"
+// 校验和 = 帧头到最后一个 ';' 之前所有字节的异或。
+// 解析成功返回 true 并填充 frame（同时记录接收时刻 tick_ms）。
 static bool parse_vision_line(char *line, vision_frame_t &frame)
 {
     char *last_sep = std::strrchr(line, ';');
@@ -94,6 +113,7 @@ static bool parse_vision_line(char *line, vision_frame_t &frame)
     return true;
 }
 
+// 通用浮点限幅: 把 value 夹到 [min_value, max_value]
 static float clampf(float value, float min_value, float max_value)
 {
     if (value < min_value)
@@ -107,14 +127,14 @@ static void pid_task_entry(void *pv)
 {
     (void)pv;
 
-    servo pipe_servo(&htim9, TIM_CHANNEL_1, 270.0f);
+    servo pipe_servo(&htim9, TIM_CHANNEL_1, 270.0f);  // 管道倾角舵机 TIM9_CH1
     pipe_servo.start();
     pipe_servo.set_angle(SERVO_CENTER_DEG);
 
     pid pos_pid(0.020f, 0.0f, 0.004f, TS, -8.0f, 8.0f);       // pixel error -> target pipe pitch(deg)
     pid pitch_pid(45.0f, 0.0f, 3.0f, TS, -35.0f, 35.0f);      // pitch(rad) -> servo correction(deg)
 
-    HAL_UART_Receive_IT(&huart2, &pid_uart_rx_byte, 1);
+    HAL_UART_Receive_IT(&huart2, &pid_uart_rx_byte, 1);       // 启动 UART2 中断接收视觉帧
 
     char line[160] = {0};
     size_t line_len = 0;
@@ -126,6 +146,7 @@ static void pid_task_entry(void *pv)
 
     while (1)
     {
+        // ---- 取尽队列中的串口字节，按 '\n' 拼帧 ----
         uint8_t byte = 0;
         while (xQueueReceive(pid_uart_queue, &byte, 0) == pdTRUE)
         {
@@ -163,6 +184,7 @@ static void pid_task_entry(void *pv)
 
         vTaskDelayUntil(&last_wake, pdMS_TO_TICKS(10));
 
+        // ---- 控制计算: 两级 PID + 舵机角度限幅 ----
         float target_pitch_deg = pos_pid.calculate(0.0f, static_cast<float>(local_frame.errx));
         ball_target_pitch = target_pitch_deg * PI_F / 180.0f;
 

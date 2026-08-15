@@ -1,3 +1,13 @@
+/**
+ * @file    key.cpp
+ * @brief   按键驱动实现
+ *
+ *          状态机(每 10ms 由任务调用 key_tick 一次):
+ *            idle -> debounce(按下) -> pressed -> click/release
+ *            pressed 按住超过 long_pressed_ms -> long_pressed(长按, 持续返回)
+ *          按键低电平有效(外部上拉)。
+ */
+
 #include <cstdio>
 #include <cstdint>
 #include "stm32f407xx.h"
@@ -10,6 +20,7 @@ key::key(GPIO_TypeDef *_gpio_port, uint16_t _gpio_num)
 
 }
 
+// 按键状态机步进，返回本次发生的事件(click/long_press 等)
 key_event key::key_tick(void)
 {
     uint32_t now_tick = HAL_GetTick();

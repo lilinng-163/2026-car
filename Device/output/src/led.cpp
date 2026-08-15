@@ -1,3 +1,10 @@
+/**
+ * @file    led.cpp
+ * @brief   LED 驱动实现
+ *
+ *          低电平点亮(高电平熄灭)，is_on 记录点亮状态。
+ */
+
 #include <string_view>
 #include <cstdio>
 #include "stm32f4xx_hal.h"
