@@ -20,7 +20,7 @@ while ($retry -lt 3) {
     $retry++
     Write-Host "Attempt $retry/3 ..."
 
-    & openocd.exe -f interface/stlink-v2.cfg -f target/stm32f4x.cfg -c "transport select swd" -c "adapter speed 2000" -c "init" -c "reset halt" -c "flash write_image erase $Firmware 0x08000000" -c "verify_image $Firmware 0x08000000" -c "reset run" -c "shutdown"
+    & openocd.exe -f interface/cmsis-dap.cfg -f target/stm32f4x.cfg -c "transport select swd" -c "adapter speed 2000" -c "gdb_port 0" -c "init" -c "reset halt" -c "flash write_image erase $Firmware 0x08000000" -c "verify_image $Firmware 0x08000000" -c "reset run" -c "shutdown"
 
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Success!" -ForegroundColor Green

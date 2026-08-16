@@ -2,7 +2,7 @@ add_library(app OBJECT
     sensors/src/imu_task.cpp
     sensors/src/tracking_task.cpp
     control/src/pid_task.cpp
-    control/src/servo_task.cpp
+    control/src/stepper_task.cpp
     control/src/vector_pid_task.cpp
     ui/src/oled_task.cpp
     comm/src/uart_cmd_task.cpp
