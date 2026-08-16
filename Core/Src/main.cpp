@@ -19,7 +19,6 @@
 #include "FreeRTOS/FreeRTOS.h"
 #include "FreeRTOS/task.h"
 #include "led_task.h"
-#include "servo_task.h"
 #include "key_task.h"
 #include "oled_task.h"
 #include "vector_pid_task.h"
@@ -27,6 +26,8 @@
 #include "imu_task.h"
 #include "tracking_task.h"
 #include "uart_cmd_task.h"
+#include "stepper_task.h"
+#include "stepper.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -132,6 +133,7 @@ int main(void)
   MX_ADC1_Init();
   MX_USART3_UART_Init();
   MX_TIM4_Init();
+  MX_TIM8_Init();
   MX_TIM9_Init();
   /* USER CODE BEGIN 2 */
   // 行缓冲: 每行凑齐后由 _write 一次性发出，配合 print_mutex 保证各任务整行原子输出
@@ -174,7 +176,6 @@ int main(void)
 
   // ---- 创建各 RTOS 任务 ----
   led_task_create();
-  // servo is controlled by pid_task for the 25cm pipe/ball system.
   key_task_create();
   oled_task_create();
   vector_pid_task_create();
@@ -182,6 +183,7 @@ int main(void)
   // UART2 is used by pid_task to receive vision frames.
   tracking_task_create();
   uart_cmd_task_create();
+  stepper_task_create();
 
   vTaskStartScheduler();
 
@@ -265,8 +267,11 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   {
     HAL_IncTick();
   }
-  /* USER CODE BEGIN Callback 1 */
-
+/* USER CODE BEGIN Callback 1 */
+  if (htim->Instance == TIM8)
+  {
+    stepper::on_tim_update();
+  }
   /* USER CODE END Callback 1 */
 }
 
