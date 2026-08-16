@@ -1,6 +1,6 @@
 /**
  * @file    soft_i2c.h
- * @brief   软件 I2C (GPIO 模拟) 主设备驱动声明 —— soft_drivers 层
+ * @brief   软件 I2C (GPIO 模拟) 主设备驱动声明 —— SoftDrivers 层
  *
  * @details 通过 GPIO 模拟标准 I2C 时序，提供 START/STOP/字节收发/ACK 处理，
  *          以及面向寄存器的写/读事务。HAL 调用集中于本类，上层设备(如 oled096)

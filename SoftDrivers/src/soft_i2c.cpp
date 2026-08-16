@@ -1,6 +1,6 @@
 /**
  * @file    soft_i2c.cpp
- * @brief   软件 I2C (GPIO 模拟) 主设备驱动实现 —— soft_drivers 层
+ * @brief   软件 I2C (GPIO 模拟) 主设备驱动实现 —— SoftDrivers 层
  *
  * @note    时序: START/STOP/字节收发/ACK。SCL/SDA 通过 HAL_GPIO 操作。
  *          - send_data():    START + 设备地址(W) + 寄存器地址 + 数据... + STOP

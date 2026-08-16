@@ -44,29 +44,56 @@ main.cpp ──> lv_init/lcd_init/touch_init → tasks → vTaskStartScheduler
                 └── oled_task (prio=?): OLED display
 
 app/
-├── inc/
-│   ├── lvgl_task.h
-│   ├── led_task.h
-│   ├── key_task.h
-│   ├── servo_task.h
-│   ├── lv_obj.h
-│   ├── motor_task.h   # extern left/right_motor_pid instances
-│   ├── mutex.h         # FreeRTOS mutex (lvgl, motor)
-│   └── show_pv.h
-└── src/
-    ├── lvgl_task.cpp
-    ├── led_task.cpp
-    ├── key_task.cpp    # button state machine → page nav + PID tuning
-    ├── servo_task.cpp
-    ├── lv_obj.cpp
-    ├── motor_task.cpp  # defines left/right_motor_pid
-    ├── mutex.cpp
-    └── show_pv.cpp
+├── CMakeLists.txt
+├── common/                 # 公共头文件
+│   └── inc/
+│       └── debug_print.h   # 各任务调试打印总开关
+├── sensors/                # 传感器数据采集任务
+│   ├── inc/
+│   │   ├── imu_task.h
+│   │   └── tracking_task.h
+│   └── src/
+│       ├── imu_task.cpp
+│       └── tracking_task.cpp
+├── control/                # 控制算法任务
+│   ├── inc/
+│   │   ├── pid_task.h
+│   │   ├── servo_task.h
+│   │   └── vector_pid_task.h
+│   └── src/
+│       ├── pid_task.cpp
+│       ├── servo_task.cpp
+│       └── vector_pid_task.cpp
+├── ui/                     # 显示/交互 UI
+│   ├── inc/
+│   │   ├── oled_task.h
+│   │   └── tune_ui.h
+│   └── src/
+│       └── oled_task.cpp
+├── comm/                   # 通信任务
+│   ├── inc/
+│   │   └── uart_cmd_task.h
+│   └── src/
+│       └── uart_cmd_task.cpp
+└── system/                 # 系统任务 (按键/指示灯)
+    ├── inc/
+    │   ├── key_task.h
+    │   └── led_task.h
+    └── src/
+        ├── key_task.cpp
+        └── led_task.cpp
 
-middleware/
+Core/Src/
+└── uart_isr.cpp            # UART 中断回调 (ISR 层)
+
+Middleware/
 └── pid/
     ├── inc/pid.h       # CMSIS-DSP PID wrapper, get_instance() returns ref (未验证)
     └── src/pid.cpp
+
+SoftDrivers/
+├── inc/soft_i2c.h      # 软件 I2C (GPIO 模拟)
+└── src/soft_i2c.cpp
 
 Device/input/
 ├── inc/
