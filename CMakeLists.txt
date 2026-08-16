@@ -50,17 +50,17 @@ add_subdirectory(Lib/DSP)
 add_subdirectory(Lib/ETL)
 
 # Middleware
-add_subdirectory(middleware/pid)
+add_subdirectory(Middleware/pid)
 
-# Soft drivers (GPIO 模拟协议)
-add_subdirectory(soft_drivers)
+# Soft drivers (GPIO ģ��Э��)
+add_subdirectory(SoftDrivers)
 
 # Device drivers
 add_subdirectory(Device/output)
 add_subdirectory(Device/input)
 
 # App
-add_subdirectory(app)
+add_subdirectory(App)
 
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE

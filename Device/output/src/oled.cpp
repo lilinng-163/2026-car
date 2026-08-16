@@ -2,7 +2,7 @@
  * @file    oled.cpp
  * @brief   OLED SSD1306 驱动 (128x64) —— 组合软件 I2C，像素操作、字符串/数字显示
  *
- * @note    组合 soft_i2c (soft_drivers 层) 进行总线通信，设备地址 0x78。
+ * @note    组合 soft_i2c (SoftDrivers 层) 进行总线通信，设备地址 0x78。
  *          命令模式寄存器 0x00，数据模式寄存器 0x40。
  *          支持 8x16 ASCII 字库 (F8x16)。
  */
