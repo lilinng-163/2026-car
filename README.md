@@ -38,7 +38,7 @@ main.cpp ──> lv_init/lcd_init/touch_init → tasks → vTaskStartScheduler
                 ├── show_pv_task (prio=2): create UI, page switch, periodic PID/DHT11 refresh
                 ├── led_task (prio=3): LED blink every 500ms
                 ├── key_task (prio=3): KEY0~3 scan; page nav + tune left PID Kp (+0.2)
-                ├── servo_task (prio=3): sweep servo 0~180° via TIM2_CH1
+                ├── stepper_task (prio=3): sweep stepper forward/backward via TIM8_CH1
                 ├── motor_task (prio=?): speed PID loop every 10ms (未验证)
                 ├── imu_task (prio=3): UART RX interrupt → queue → feed_byte → parse_frame → semaphore notify
                 └── oled_task (prio=?): OLED display
@@ -48,7 +48,7 @@ app/
 │   ├── lvgl_task.h
 │   ├── led_task.h
 │   ├── key_task.h
-│   ├── servo_task.h
+│   ├── stepper_task.h
 │   ├── lv_obj.h
 │   ├── motor_task.h   # extern left/right_motor_pid instances
 │   ├── mutex.h         # FreeRTOS mutex (lvgl, motor)
@@ -57,7 +57,7 @@ app/
     ├── lvgl_task.cpp
     ├── led_task.cpp
     ├── key_task.cpp    # button state machine → page nav + PID tuning
-    ├── servo_task.cpp
+    ├── stepper_task.cpp
     ├── lv_obj.cpp
     ├── motor_task.cpp  # defines left/right_motor_pid
     ├── mutex.cpp

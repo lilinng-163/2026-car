@@ -5,6 +5,7 @@ add_library(device_output OBJECT
     src/beep.cpp
     src/motor.cpp
     src/servo.cpp
+    src/stepper.cpp
     src/oled.cpp
 )
 
